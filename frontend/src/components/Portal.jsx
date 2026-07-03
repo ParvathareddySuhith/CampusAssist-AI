@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Squares from "./ui/Squares";
-import ChatBox from "./ChatBox";
 import GradientText from "./ui/GradientText";
 import SpotlightCard from "./ui/SpotlightCard";
 import { 
@@ -20,8 +19,6 @@ import { getChatHistory } from "../lib/api";
 
 function Portal() {
   const navigate = useNavigate();
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isDocsOpen, setIsDocsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState("Suhith");
   const [recentChats, setRecentChats] = useState([]);
@@ -151,7 +148,7 @@ function Portal() {
                 </p>
               </div>
               <button 
-                onClick={() => setIsChatOpen(true)}
+                onClick={() => navigate("/assistant")}
                 className="w-fit mt-4 px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white rounded-lg text-sm font-medium transition-all cursor-pointer shadow-md flex items-center space-x-1.5"
               >
                 <span>Open Assistant</span>
@@ -174,7 +171,7 @@ function Portal() {
                 </p>
               </div>
               <button 
-                onClick={() => setIsDocsOpen(true)}
+                onClick={() => navigate("/documents")}
                 className="w-fit mt-4 px-4 py-2 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600 hover:text-white rounded-lg text-sm font-medium transition-all cursor-pointer shadow-md flex items-center space-x-1.5"
               >
                 <span>Browse Documents</span>
@@ -237,7 +234,7 @@ function Portal() {
                     {recentChats.map((chat) => (
                       <div 
                         key={chat._id} 
-                        onClick={() => setIsChatOpen(true)}
+                        onClick={() => navigate("/assistant")}
                         className="p-3 bg-neutral-900/60 border border-neutral-800 rounded-lg hover:border-neutral-700 transition-colors cursor-pointer text-sm"
                       >
                         <p className="text-white font-medium truncate">{chat.question}</p>
@@ -268,7 +265,7 @@ function Portal() {
             <ul className="space-y-2.5">
               <li>
                 <button 
-                  onClick={() => setIsChatOpen(true)}
+                  onClick={() => navigate("/assistant")}
                   className="w-full flex items-center justify-between p-2.5 rounded-lg bg-neutral-900/60 hover:bg-neutral-800/80 border border-neutral-800 hover:border-neutral-700 text-sm text-left transition-all text-blue-400 font-medium cursor-pointer"
                 >
                   <span>• Ask a Question</span>
@@ -277,7 +274,7 @@ function Portal() {
               </li>
               <li>
                 <button 
-                  onClick={() => setIsDocsOpen(true)}
+                  onClick={() => navigate("/documents")}
                   className="w-full flex items-center justify-between p-2.5 rounded-lg bg-neutral-900/60 hover:bg-neutral-800/80 border border-neutral-800 hover:border-neutral-700 text-sm text-left transition-all text-emerald-400 font-medium cursor-pointer"
                 >
                   <span>• Browse Documents</span>
@@ -297,71 +294,6 @@ function Portal() {
           </div>
         </aside>
       </main>
-
-      {/* Floating ChatBox View */}
-      {isChatOpen && (
-        <ChatBox onClose={() => setIsChatOpen(false)} />
-      )}
-
-      {/* Document Browser Modal */}
-      {isDocsOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-xl max-h-[80vh] flex flex-col shadow-2xl">
-            <div className="p-4 border-b border-neutral-850 flex justify-between items-center">
-              <div className="flex items-center space-x-2">
-                <FaFileAlt className="text-emerald-400 w-5 h-5" />
-                <h3 className="text-lg font-bold text-white">Academic Documents</h3>
-              </div>
-              <button 
-                onClick={() => setIsDocsOpen(false)}
-                className="text-neutral-400 hover:text-white bg-neutral-800 hover:bg-neutral-750 p-1.5 rounded-lg transition-colors cursor-pointer"
-              >
-                <IoClose className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 flex-1 overflow-y-auto flex flex-col justify-center items-center">
-              {isAdmin ? (
-                <div className="w-full space-y-4">
-                  <p className="text-sm text-neutral-400 text-center">
-                    You are logged in as Administrator. Navigate to the Admin Dashboard to manage files.
-                  </p>
-                  <button
-                    onClick={() => navigate("/admin/dashboard")}
-                    className="w-full py-2.5 bg-yellow-500 hover:bg-yellow-600 text-neutral-950 font-bold rounded-lg transition-colors flex items-center justify-center space-x-2 cursor-pointer text-sm shadow-md"
-                  >
-                    <FaUpload className="w-4 h-4" />
-                    <span>Go to Admin Document Dashboard</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-neutral-950/60 rounded-full border border-neutral-850 flex items-center justify-center mx-auto shadow-inner text-emerald-400 text-2xl">
-                    🔒
-                  </div>
-                  <h4 className="text-white font-semibold text-md">Access Restricted</h4>
-                  <p className="text-neutral-400 text-sm max-w-md leading-relaxed">
-                    Direct access to browse and download individual PDF source documents is restricted to administrators to preserve intellectual integrity.
-                  </p>
-                  <div className="bg-emerald-950/20 border border-emerald-900/30 rounded-lg p-3 text-emerald-400 text-xs">
-                    💡 Suggestion: Open the AI Assistant to query the contents of these documents instantly!
-                  </div>
-                  <div className="pt-2">
-                    <button
-                      onClick={() => {
-                        setIsDocsOpen(false);
-                        setIsChatOpen(true);
-                      }}
-                      className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors cursor-pointer text-sm shadow-md"
-                    >
-                      Open AI Assistant
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

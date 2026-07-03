@@ -14,7 +14,7 @@ import { FiLogOut, FiLogIn } from "react-icons/fi"; // More distinct login/logou
 import { getChatHistory, submitQuery } from "../lib/api";
 import { format } from "date-fns";
 
-function ChatBox({ onClose }) {
+function ChatBox({ onClose, isStandalone = false }) {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -351,8 +351,8 @@ function ChatBox({ onClose }) {
   return (
     <div 
       ref={chatBoxRef}
-      className="fixed right-8" 
-      style={{ 
+      className={isStandalone ? "w-full h-full relative z-10" : "fixed right-8"} 
+      style={isStandalone ? { transition: 'all 0.3s ease' } : { 
         height: `${size.height}%`, 
         width: `${size.width}%`, 
         bottom: '2rem',
