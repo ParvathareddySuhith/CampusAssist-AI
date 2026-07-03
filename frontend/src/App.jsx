@@ -1,8 +1,11 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import AppLayout from "./components/layout/AppLayout";
 import Portal from "./components/Portal";
 import AssistantPage from "./components/AssistantPage";
 import DocumentsPage from "./components/DocumentsPage";
+import ProfilePage from "./components/ProfilePage";
+import SettingsPage from "./components/SettingsPage";
 import LoginAdmin from './components/LoginAdmin';
 import Admin from './components/Admin';
 import UserLogin from './components/UserLogin';
@@ -26,12 +29,14 @@ function App() {
         {/* Root redirect to Dashboard */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         
-        {/* Main portal dashboard page */}
-        <Route path="/dashboard" element={<Portal />} />
-        
-        {/* Standalone subpages */}
-        <Route path="/assistant" element={<AssistantPage />} />
-        <Route path="/documents" element={<DocumentsPage />} />
+        {/* Authenticated routes sharing the AppLayout */}
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<Portal />} />
+          <Route path="/assistant" element={<AssistantPage />} />
+          <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Route>
         
         {/* User auth routes */}
         <Route path="/login" element={<UserLogin />} />

@@ -70,6 +70,16 @@ class ChatService:
         self.vectorstore = vectorstore
         self.query_model = Query()
         self.chat_history_model = ChatHistory()
+        
+        # Initialize intent handlers registry once (Dependency Injection)
+        from services.ai.registry import HANDLER_REGISTRY
+        from services.ai.router import AIRouter
+        
+        self.handlers = {
+            intent: handler_class(vectorstore)
+            for intent, handler_class in HANDLER_REGISTRY.items()
+        }
+        self.router = AIRouter(self.handlers)
     
     def _get_llm(self):
         """Get LLM instance based on configured provider"""
@@ -148,35 +158,32 @@ class ChatService:
         
         # Close any remaining open list
         if in_list:
-            formatted_lines.append(f'</{in_list}>')
-        
-        # Join lines and handle code blocks
-        result = '\n'.join(formatted_lines)
-        
-        # Convert code blocks (```code```)
-        result = re.sub(r'```(.*?)```', r'<pre><code>\1</code></pre>', result, flags=re.DOTALL)
-        
-        return result
+            return ""
+        # Convert newlines to breaks
+        formatted = text.replace('\n', '<br>')
+        # Convert bold markdown **text** to HTML <strong>text</strong>
+        formatted = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', formatted)
+        # Convert list markdown - text to HTML bullet lists
+        formatted = re.sub(r'^\s*-\s+(.*?)(?=\n|$)', r'<li>\1</li>', formatted, flags=re.MULTILINE)
+        return formatted
 
     def cleanup_expired_sessions(self):
-        """Clean up expired sessions if needed"""
+        """Periodically cleanup inactive sessions"""
         current_time = time.time()
-        expired_sessions = [
-            sid for sid, last_active in session_timestamps.items()
-            if current_time - last_active > Config.SESSION_TIMEOUT
-        ]
+        expired_sessions = []
+        for sid, last_activity in session_timestamps.items():
+            if current_time - last_activity > Config.SESSION_TIMEOUT:
+                expired_sessions.append(sid)
         
         for sid in expired_sessions:
-            if sid in conversation_memories:
-                del conversation_memories[sid]
+            print(f"Cleaning up expired session: {sid}")
             if sid in session_timestamps:
                 del session_timestamps[sid]
-        
-        if expired_sessions:
-            print(f"Cleaned up {len(expired_sessions)} expired sessions")
+            if sid in conversation_memories:
+                del conversation_memories[sid]
     
     def update_session_timestamp(self, session_id):
-        """Update last activity time for a session"""
+        """Update last activity timestamp for a session"""
         session_timestamps[session_id] = time.time()
     
     def get_conversation_chain(self, session_id):
@@ -254,105 +261,11 @@ class ChatService:
                     "session_id": session_id
                 }, 200
 
-            # Get conversation chain for this session
-            chat_chain = self.get_conversation_chain(session_id)
+            # Route query using the modular AI Service Layer
+            intent = self.router.route_query(question)
+            handler = self.handlers.get(intent, self.handlers["GENERAL"])
             
-            # Get response with timeout handling and retry logic
-            @retry_with_exponential_backoff(max_retries=3, base_delay=2)
-            def call_ai_chain():
-                # Use invoke method instead of deprecated __call__
-                try:
-                    return chat_chain.invoke({"question": question})
-                except AttributeError:
-                    # Fallback to old method if invoke doesn't exist
-                    return chat_chain({"question": question})
-            
-            try:
-                result = call_ai_chain()
-                answer = result["answer"].strip()
-                
-            except TimeoutError:
-                print("AI processing timed out")
-                return {
-                    "error": "The AI service is taking longer than expected. Please try again with a shorter question.",
-                    "user_friendly_error": True,
-                    "session_id": session_id
-                }, 408  # Request Timeout
-            except Exception as ai_error:
-                print(f"AI processing error: {str(ai_error)}")
-                error_str = str(ai_error).lower()
-                
-                if "quota" in error_str or "rate limit" in error_str:
-                    return {
-                        "error": "AI service is currently at capacity. Please try again in a few moments.",
-                        "user_friendly_error": True,
-                        "session_id": session_id
-                    }, 429  # Too Many Requests
-                elif "504" in error_str or "deadline exceeded" in error_str or "timeout" in error_str:
-                    return {
-                        "error": "The AI service is taking longer than expected to process your query. Please try again with a simpler question or wait a moment and retry.",
-                        "user_friendly_error": True,
-                        "session_id": session_id
-                    }, 408  # Request Timeout
-                elif "embedding" in error_str:
-                    return {
-                        "error": "There was an issue processing your query for search. Please try rephrasing your question or try again later.",
-                        "user_friendly_error": True,
-                        "session_id": session_id
-                    }, 503  # Service Unavailable
-                raise ai_error
-            
-            print("\nGenerated answer:", answer)
-            print("="*50 + "\n")
-            
-            # Check for various forms of "no answer" responses
-            no_answer_phrases = [
-                "i do not know",
-                "i don't know",
-                "cannot find",
-                "no information",
-                "insufficient information",
-                "the document does not contain",
-                "no relevant information",
-                "cannot answer",
-                "unable to answer"
-            ]
-            
-            if any(phrase in answer.lower() for phrase in no_answer_phrases):
-                print("No answer found - adding to unanswered queries")
-                
-                # Store unanswered query
-                self.query_model.create_query(question, user_id, answered=False)
-                
-                return {
-                    "answer": "I apologize, but I don't have enough information to answer this question accurately. Your query has been logged for manual review.",
-                    "status": "unanswered",
-                    "session_id": session_id
-                }, 404
-            
-            # Store chat history if user is logged in and query was answered
-            if user_id and "i do not know" not in answer.lower():
-                try:
-                    self.chat_history_model.create_chat(user_id, question, answer)
-                except Exception as e:
-                    print(f"Error storing chat history: {str(e)}")
-            
-            # Get chat history for this session
-            memory = conversation_memories.get(session_id)
-            chat_history = []
-            if memory:
-                chat_history = [str(msg) for msg in memory.chat_memory.messages]
-            
-            # Format the response
-            formatted_answer = self.format_response(answer)
-            
-            return {
-                "answer": formatted_answer,
-                "raw_answer": answer,
-                "chat_history": chat_history,
-                "status": "answered",
-                "session_id": session_id
-            }, 200
+            return handler.handle(question, session_id, user_id)
             
         except Exception as e:
             error_msg = f"Error processing query: {str(e)}"
