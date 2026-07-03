@@ -1,6 +1,6 @@
-# Student Query Chatbot - Backend
+# CampusAssist AI - Backend
 
-This directory contains the Flask backend for the Student Query Chatbot system. The backend powers the RAG (Retrieval Augmented Generation) system, PDF processing, and admin features.
+This directory contains the Flask backend for the CampusAssist AI system. The backend powers the RAG (Retrieval Augmented Generation) system, PDF processing, and admin features.
 
 ## 🚀 Key Features
 

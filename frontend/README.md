@@ -1,6 +1,6 @@
-# Student Query Chatbot - Frontend
+# CampusAssist AI - Frontend
 
-This directory contains the React frontend for the Student Query Chatbot system. The frontend provides user and admin interfaces for interacting with the AI chatbot and managing the system.
+This directory contains the React frontend for the CampusAssist AI system. The frontend provides user and admin interfaces for interacting with the AI chatbot and managing the system.
 
 ## 🚀 Key Features
 

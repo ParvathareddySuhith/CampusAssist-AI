@@ -100,7 +100,7 @@ def get_vector_store(text_chunks, metadatas=None):
         # Check if we have any valid chunks after cleaning
         if not clean_chunks:
             print("WARNING: No valid chunks after sanitization, using default text")
-            clean_chunks = ["This is a student query chatbot for academic assistance."]
+            clean_chunks = ["This is a CampusAssist AI platform for academic and administrative assistance."]
             metadatas = [{"source": "default"}]
         else:
             # Always create fresh minimal metadata to avoid any size issues
@@ -149,7 +149,7 @@ def get_vector_store(text_chunks, metadatas=None):
     except Exception as e:
         print(f"Error creating vector store: {str(e)}")
         # Create a minimal vector store with default content
-        default_text = ["This is a student query chatbot for academic assistance."]
+        default_text = ["This is a CampusAssist AI platform for academic and administrative assistance."]
         embeddings = get_embeddings_model()
         
         vectorstore = PineconeVectorStore.from_texts(
@@ -171,7 +171,7 @@ def create_embeddings():
     if not pdf_resources:
         print("No PDF resources found in Cloudinary")
         # Create a default embedding if no PDFs are available
-        default_text = "This is a student query chatbot for academic assistance."
+        default_text = "This is a CampusAssist AI platform for academic and administrative assistance."
         chunks = get_text_chunks(default_text)
         
         return get_vector_store(chunks)
@@ -193,7 +193,7 @@ def create_embeddings():
     
     if not all_text.strip():
         print("No text extracted from PDFs, creating default vectorstore")
-        default_text = "This is a student query chatbot for academic assistance."
+        default_text = "This is a CampusAssist AI platform for academic and administrative assistance."
         chunks = get_text_chunks(default_text)
         return get_vector_store(chunks)
     

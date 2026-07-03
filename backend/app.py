@@ -1,6 +1,6 @@
 """
-Student Chatbot Application
-A professional Flask application for student query resolution using RAG and AI.
+CampusAssist AI Application
+A professional Flask application for CampusAssist AI query resolution using RAG and AI.
 """
 
 import os
@@ -152,7 +152,7 @@ def create_app(config_name='default'):
         # Create a fallback vectorstore with minimal default content
         print("Creating fallback vectorstore with default content")
         # Use a simple default text for embedding
-        default_text = ["This is a student query chatbot for academic assistance."]
+        default_text = ["This is a CampusAssist AI platform for academic and administrative assistance."]
         try:
             # Try to create a minimal vectorstore
             from utils.pdf_utils import get_vector_store
@@ -177,7 +177,7 @@ def create_app(config_name='default'):
     def health_check():
         return jsonify({
             "status": "healthy",
-            "message": "Student Chatbot API is running", 
+            "message": "CampusAssist AI API is running", 
             "timestamp": datetime.now().isoformat(),
             "environment": os.environ.get("FLASK_ENV", "development")
         }), 200
@@ -272,7 +272,7 @@ def create_app(config_name='default'):
     @app.route('/', methods=['GET'])
     def root():
         return {
-            "message": "Welcome to Student Chatbot API",
+            "message": "Welcome to CampusAssist AI API",
             "version": "2.0.0",
             "endpoints": {
                 "auth": "/api/signup, /api/login, /api/admin/login",
@@ -295,7 +295,7 @@ def main():
     debug_mode = env == 'development'
     port = int(os.getenv('PORT', 5000))
     
-    print(f"Starting Student Chatbot API in {env} mode...")
+    print(f"Starting CampusAssist AI API in {env} mode...")
     print(f"Server running on http://localhost:{port}")
     
     app.run(host='0.0.0.0', port=port, debug=debug_mode)
