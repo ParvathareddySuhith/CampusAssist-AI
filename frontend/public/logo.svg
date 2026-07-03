@@ -1,0 +1,44 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Chat Bubble Background (outer) -->
+  <path d="M 30,50 
+           A 20,20 0 0,1 50,30 
+           h 100 
+           a 20,20 0 0,1 20,20 
+           v 80 
+           a 20,20 0 0,1 -20,20 
+           h -60 
+           l -25,25 
+           v -25 
+           H 50 
+           a 20,20 0 0,1 -20,-20 
+           Z" 
+        fill="#3b82f6" 
+        fill-opacity="0.1" 
+        stroke="#3b82f6" 
+        stroke-width="3" 
+        stroke-linejoin="round"/>
+
+  <!-- AI Circuit Paths (Backdrop network) -->
+  <path d="M 45,85 L 75,85 L 90,70" fill="none" stroke="#10b981" stroke-width="2" opacity="0.6"/>
+  <path d="M 155,85 L 125,85 L 110,70" fill="none" stroke="#10b981" stroke-width="2" opacity="0.6"/>
+  <path d="M 100,120 L 100,135 L 70,145" fill="none" stroke="#10b981" stroke-width="2" opacity="0.6"/>
+  <path d="M 100,135 L 130,145" fill="none" stroke="#10b981" stroke-width="2" opacity="0.6"/>
+
+  <!-- AI Circuit Nodes (Pads) -->
+  <circle cx="45" cy="85" r="4" fill="#10b981"/>
+  <circle cx="155" cy="85" r="4" fill="#10b981"/>
+  <circle cx="70" cy="145" r="4" fill="#10b981"/>
+  <circle cx="130" cy="145" r="4" fill="#10b981"/>
+  <circle cx="100" cy="135" r="3.5" fill="#10b981"/>
+
+  <!-- Graduation Cap -->
+  <!-- Skull Cap (bottom base of cap) -->
+  <path d="M 72,82 v 14 c 0,12 56,12 56,0 V 82 Z" fill="#1d4ed8" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+  
+  <!-- Mortarboard Diamond (top of cap) -->
+  <polygon points="100,55 148,73 100,91 52,73" fill="#3b82f6" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+  
+  <!-- Tassel (hanging cord and brush) -->
+  <path d="M 100,73 L 136,79 L 136,104" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <polygon points="133,104 139,104 141,114 131,114" fill="#fbbf24"/>
+</svg>
