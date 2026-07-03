@@ -180,6 +180,15 @@ function ChatBox({ onClose }) {
     }
   };
 
+  const handleSuggestionClick = (suggestion) => {
+    if (isTyping) return;
+    setMessage(suggestion);
+    const textarea = document.getElementById("message");
+    if (textarea) {
+      textarea.focus();
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!message.trim() || isTyping) return;
 
@@ -591,24 +600,40 @@ function ChatBox({ onClose }) {
               <div ref={messagesEndRef} style={{ height: "1px" }} />
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center text-center h-full px-6 py-8 space-y-6">
+            <div className="flex flex-col items-center justify-center text-center h-full px-6 py-4 space-y-5 overflow-y-auto">
               {/* Logo */}
-              <div className="w-24 h-24 bg-blue-500/10 rounded-full flex items-center justify-center border border-blue-500/20 shadow-inner">
-                <img src="/logo.svg" alt="CampusAssist AI Logo" className="w-16 h-16 animate-pulse" />
+              <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center border border-blue-500/20 shadow-inner">
+                <img src="/logo.svg" alt="CampusAssist AI Logo" className="w-12 h-12" />
               </div>
               {/* Heading */}
               <h3 className="text-white text-2xl font-bold tracking-tight">
-                Welcome to CampusAssist AI
+                Welcome to CampusAssist AI 👋
               </h3>
               {/* Subtitle */}
               <p className="text-gray-400 text-sm max-w-sm leading-relaxed">
-                Your intelligent campus companion for academic guidance, institutional information and placement preparation.
+                Your intelligent campus companion for academic guidance, institutional information and placement support.
               </p>
-              {/* Tip */}
-              <div className="bg-blue-950/40 border border-blue-800/30 rounded-lg p-3 max-w-sm">
-                <p className="text-blue-400 text-xs font-medium">
-                  Tip: Ask questions about courses, placement criteria, or campus facilities!
-                </p>
+              {/* Suggestion Chips */}
+              <div className="w-full max-w-sm">
+                <p className="text-gray-500 text-xs mb-2.5 font-medium">Common Topics:</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {[
+                    "Academic Regulations",
+                    "Fee Structure",
+                    "Placement Support",
+                    "Hostel Information",
+                    "Library Rules",
+                    "Course Syllabus"
+                  ].map((chip) => (
+                    <button
+                      key={chip}
+                      onClick={() => handleSuggestionClick(chip)}
+                      className="bg-gray-800/60 hover:bg-blue-500/10 text-gray-300 hover:text-blue-400 border border-gray-700/50 hover:border-blue-500/30 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer shadow-sm active:scale-95"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
