@@ -27,6 +27,7 @@ from routes.auth_routes import create_auth_routes
 from routes.chat_routes import create_chat_routes
 from routes.admin_routes import create_legacy_admin_routes
 from routes.pdf_routes import create_pdf_routes
+from routes.profile_routes import create_profile_routes
 
 # Import middleware
 from middleware.middleware import (
@@ -170,6 +171,7 @@ def create_app(config_name='default'):
     app.register_blueprint(create_admin_routes(email_service))
     app.register_blueprint(create_legacy_admin_routes(email_service))  # For backward compatibility
     app.register_blueprint(create_pdf_routes())
+    app.register_blueprint(create_profile_routes())
     
     # Health check endpoint
     @app.route('/health', methods=['GET'])

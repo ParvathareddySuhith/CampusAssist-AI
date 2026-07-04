@@ -12,12 +12,12 @@ class BaseHandler:
         self.intent_name = "BASE"
         self.handler_name = "BaseHandler"
 
-    def handle(self, question, session_id, user_id=None):
+    def handle(self, question, session_id, user_id=None, routing_context=None):
         """Unified entry point for query processing with telemetry logging"""
         start_time = time.time()
         
         try:
-            result, status_code = self._execute(question, session_id, user_id)
+            result, status_code = self._execute(question, session_id, user_id, routing_context)
         except Exception as e:
             print(f"[AI Service Layer] Error executing {self.handler_name}: {str(e)}")
             raise e
@@ -32,7 +32,7 @@ class BaseHandler:
         
         return result, status_code
 
-    def _execute(self, question, session_id, user_id=None):
+    def _execute(self, question, session_id, user_id=None, routing_context=None):
         """Abstract execution method overridden by subclasses"""
         raise NotImplementedError("Subclasses must implement _execute()")
 

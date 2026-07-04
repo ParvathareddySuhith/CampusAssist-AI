@@ -214,3 +214,48 @@ class PDF:
             "folder": folder,
             "file_id": file_id
         }
+
+
+class StudentProfile:
+    """Student profile model for handling academic and personal profile details"""
+    
+    def __init__(self):
+        self.collection = db_instance.get_collection("profiles")
+
+    def get_profile(self, user_id):
+        """Retrieve student profile by user ID"""
+        profile = self.collection.find_one({"user_id": ObjectId(user_id)})
+        if profile:
+            profile["_id"] = str(profile["_id"])
+            profile["user_id"] = str(profile["user_id"])
+        return profile
+
+    def upsert_profile(self, user_id, profile_data):
+        """Insert or update a student profile"""
+        update_fields = {
+            "full_name": profile_data.get("full_name"),
+            "department": profile_data.get("department"),
+            "year": int(profile_data.get("year")),
+            "semester": int(profile_data.get("semester")),
+            "section": profile_data.get("section", ""),
+            "roll_number": profile_data.get("roll_number", ""),
+            
+            # Future fields mapped out for personalization and AI query context injection
+            # "skills": profile_data.get("skills", []),
+            # "interests": profile_data.get("interests", []),
+            # "preferred_language": profile_data.get("preferred_language", "English"),
+            # "career_goal": profile_data.get("career_goal", ""),
+            
+            "updated_at": datetime.datetime.utcnow()
+        }
+
+        result = self.collection.update_one(
+            {"user_id": ObjectId(user_id)},
+            {
+                "$set": update_fields,
+                "$setOnInsert": {"created_at": datetime.datetime.utcnow()}
+            },
+            upsert=True
+        )
+        return result.modified_count or result.upserted_id
+

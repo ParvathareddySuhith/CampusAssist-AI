@@ -13,7 +13,7 @@ class RAGHandler(BaseHandler):
     
     def __init__(self, vectorstore):
         super().__init__(vectorstore)
-        self.intent_name = "CAMPUS" # Default RAG intent for Task 4A
+        self.intent_name = "RAG"
         self.handler_name = "RAGHandler"
 
     def get_conversation_chain(self, session_id):
@@ -52,7 +52,7 @@ class RAGHandler(BaseHandler):
             combine_docs_chain_kwargs={"prompt": ChatPromptTemplate.from_template(template)}
         )
 
-    def _execute(self, question, session_id, user_id=None):
+    def _execute(self, question, session_id, user_id=None, routing_context=None):
         """Execute RAG pipeline"""
         if not self.vectorstore:
             return {

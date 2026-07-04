@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import Squares from "../ui/Squares";
+import { getProfile } from "../../services/profileService";
 
 function AppLayout() {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [profile, setProfile] = useState(null);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);
@@ -18,6 +20,28 @@ function AppLayout() {
     localStorage.removeItem("username");
     navigate("/login");
   };
+
+  const refreshProfile = async () => {
+    const token = localStorage.getItem("userToken");
+    if (token) {
+      try {
+        const data = await getProfile();
+        if (data && data.department && data.semester) {
+          setProfile(data);
+        } else {
+          setProfile(null);
+        }
+      } catch (err) {
+        console.error("Error loading layout profile:", err);
+      }
+    } else {
+      setProfile(null);
+    }
+  };
+
+  useEffect(() => {
+    refreshProfile();
+  }, []);
 
   return (
     <div className="h-screen w-screen bg-neutral-950 flex overflow-hidden relative text-white">
@@ -37,6 +61,7 @@ function AppLayout() {
         isOpen={isSidebarOpen} 
         toggleSidebar={toggleSidebar} 
         handleLogout={handleLogout} 
+        profile={profile}
       />
 
       {/* Main Layout Area */}
@@ -46,7 +71,7 @@ function AppLayout() {
 
         {/* Content Body */}
         <main className="flex-1 overflow-y-auto p-6 relative">
-          <Outlet />
+          <Outlet context={{ profile, refreshProfile }} />
         </main>
       </div>
     </div>

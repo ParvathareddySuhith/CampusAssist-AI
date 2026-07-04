@@ -71,6 +71,10 @@ class ChatService:
         self.query_model = Query()
         self.chat_history_model = ChatHistory()
         
+        # Initialize ContextBuilder
+        from services.context.context_builder import ContextBuilder
+        self.context_builder = ContextBuilder()
+        
         # Initialize intent handlers registry once (Dependency Injection)
         from services.ai.registry import HANDLER_REGISTRY
         from services.ai.router import AIRouter
@@ -242,30 +246,16 @@ class ChatService:
             print("Question received:", question)
             print("="*50)
 
-            # Check if it's general chat
-            general_response = is_general_chat(question)
-            if general_response:
-                # Get chat history for this session
-                memory = conversation_memories.get(session_id)
-                chat_history = []
-                if memory:
-                    memory.chat_memory.add_user_message(question)
-                    memory.chat_memory.add_ai_message(general_response)
-                    chat_history = [str(msg) for msg in memory.chat_memory.messages]
-                
-                return {
-                    "answer": self.format_response(general_response),
-                    "raw_answer": general_response,
-                    "chat_history": chat_history,
-                    "status": "answered",
-                    "session_id": session_id
-                }, 200
-
-            # Route query using the modular AI Service Layer
-            intent = self.router.route_query(question)
-            handler = self.handlers.get(intent, self.handlers["GENERAL"])
+            # Resolve query using the modular AI Intent Resolver and Context Builder
+            request_context = self.context_builder.build_context(question, user_id, session_id)
+            handler, routing_context = self.router.resolve(request_context)
             
-            return handler.handle(question, session_id, user_id)
+            return handler.handle(
+                question=request_context.question,
+                session_id=request_context.session_id,
+                user_id=request_context.user_id,
+                routing_context=routing_context
+            )
             
         except Exception as e:
             error_msg = f"Error processing query: {str(e)}"
