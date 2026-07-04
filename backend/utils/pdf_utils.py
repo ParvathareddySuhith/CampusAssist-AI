@@ -163,85 +163,135 @@ def get_vector_store(text_chunks, metadatas=None):
         return vectorstore
 
 def create_embeddings():
-    """Create embeddings from PDFs stored in Cloudinary"""
-    # Get all PDFs from Cloudinary
-    cloudinary_service = CloudinaryService()
-    pdf_resources = cloudinary_service.list_pdfs()
+    """Create embeddings from PDFs stored in MongoDB/Cloudinary with metadata tags"""
+    from models.models import PDFMetadata
+    from utils.cloudinary_utils import download_pdf
+    import shutil
+    import tempfile
     
-    if not pdf_resources:
-        print("No PDF resources found in Cloudinary")
+    pdf_metadata_model = PDFMetadata()
+    pdf_docs = pdf_metadata_model.get_all_pdf_metadata()
+    
+    if not pdf_docs:
+        print("No PDF metadata records found in MongoDB")
         # Create a default embedding if no PDFs are available
         default_text = "This is a CampusAssist AI platform for academic and administrative assistance."
         chunks = get_text_chunks(default_text)
-        
         return get_vector_store(chunks)
-    
-    # Get URLs directly from resources
-    pdf_urls = []
-    for resource in pdf_resources:
-        # Use secure_url when available, otherwise use url
-        url = resource.get('secure_url', resource.get('url'))
-        if url:
-            pdf_urls.append(url)
-            print(f"Using URL for {resource.get('public_id')}: {url}")
-    
-    print(f"Processing {len(pdf_urls)} PDFs from Cloudinary")
-    
-    # Extract text from all PDFs
-    from utils.cloudinary_utils import get_pdf_text_from_urls
-    all_text = get_pdf_text_from_urls(pdf_urls)
-    
-    if not all_text.strip():
-        print("No text extracted from PDFs, creating default vectorstore")
-        default_text = "This is a CampusAssist AI platform for academic and administrative assistance."
-        chunks = get_text_chunks(default_text)
-        return get_vector_store(chunks)
-    
-    # Create text chunks without including text in metadata
-    # Debug the text content first
-    print(f"Total text length: {len(all_text)} characters")
-    print(f"First 100 characters: {all_text[:100]}")
-    print(f"Number of newlines: {all_text.count('\n')}")
-    
-    # Force chunking by length if needed
-    chunks = []
-    if len(all_text) > 5000:  # If text is very long
-        # Manual chunking by fixed size
-        chunk_size = 800  # Smaller chunks to be safe
-        for i in range(0, len(all_text), chunk_size):
-            chunk = all_text[i:i+chunk_size]
-            if chunk.strip():  # Only add non-empty chunks
-                chunks.append(chunk)
-        print(f"Manually created {len(chunks)} chunks")
-    else:
-        # Try standard chunking for shorter texts
-        text_splitter = CharacterTextSplitter(
-            separator="\n",
-            chunk_size=800,  # Smaller chunk size
-            chunk_overlap=100,  # Less overlap
-            length_function=len
-        )
-        chunks = text_splitter.split_text(all_text)
-        print(f"Text splitter created {len(chunks)} chunks")
-    
-    # Ensure we have chunks
-    if len(chunks) == 0:
-        print("WARNING: No chunks created, falling back to default")
-        chunks = [all_text[i:i+800] for i in range(0, len(all_text), 800)]
-        print(f"Force created {len(chunks)} chunks")
-    
-    # Create minimal metadata with only essential information
-    metadatas = []
-    for i in range(len(chunks)):
-        metadatas.append({
-            "source": "cloudinary_pdf", 
-            "chunk_id": str(i)
-        })
-    
-    print(f"Created {len(chunks)} chunks with minimal metadata")
 
-    # Use the unified get_vector_store logic, which already selects the correct embedding model
-    return get_vector_store(chunks, metadatas)
+    all_chunks = []
+    all_metadatas = []
+    
+    # Initialize Pinecone
+    pc = Pinecone(api_key=Config.PINECONE_API_KEY)
+    
+    # Process each PDF document
+    for doc in pdf_docs:
+        url = doc.get("url")
+        public_id = doc.get("public_id")
+        department = doc.get("department", "GENERAL")
+        semester = int(doc.get("semester", 0))
+        subject = doc.get("subject", "General")
+        academic_year = int(doc.get("academic_year", 0))
+        
+        if not url:
+            continue
+            
+        print(f"Processing PDF '{public_id}' with metadata: dept={department}, sem={semester}")
+        
+        # Download and extract text from this specific PDF
+        try:
+            temp_dir = tempfile.mkdtemp()
+            local_pdf_path = download_pdf(url, temp_dir)
+            
+            # Read text
+            pdf_reader = PdfReader(local_pdf_path)
+            pdf_text = ""
+            for page in pdf_reader.pages:
+                pdf_text += page.extract_text() or ""
+                
+            shutil.rmtree(temp_dir)
+            
+            if not pdf_text.strip():
+                print(f"Skipping empty PDF text for: {public_id}")
+                continue
+                
+            # Chunk the text
+            chunks = []
+            if len(pdf_text) > 5000:
+                chunk_size = 800
+                for i in range(0, len(pdf_text), chunk_size):
+                    chunk = pdf_text[i:i+chunk_size]
+                    if chunk.strip():
+                        chunks.append(chunk)
+            else:
+                text_splitter = CharacterTextSplitter(
+                    separator="\n",
+                    chunk_size=800,
+                    chunk_overlap=100,
+                    length_function=len
+                )
+                chunks = text_splitter.split_text(pdf_text)
+                
+            sanitized = sanitize_chunks(chunks)
+            
+            # Add metadata tags to each chunk
+            for i, chunk in enumerate(sanitized):
+                all_chunks.append(chunk)
+                all_metadatas.append({
+                    "source": public_id,
+                    "chunk_id": f"{public_id}_{i}",
+                    "department": department,
+                    "semester": semester,
+                    "subject": subject,
+                    "academic_year": academic_year
+                })
+                
+        except Exception as e:
+            print(f"Error processing PDF {public_id}: {str(e)}")
+            continue
+
+    if not all_chunks:
+        print("No chunks extracted from any PDFs, creating default vectorstore")
+        default_text = "This is a CampusAssist AI platform for academic and administrative assistance."
+        all_chunks = get_text_chunks(default_text)
+        all_metadatas = [{"source": "default", "department": "GENERAL", "semester": 0}]
+
+    # Re-build vector store using PineconeVectorStore
+    index_name = Config.PINECONE_INDEX_NAME
+    dimension = 384
+    
+    # Check if the index already exists
+    indexes = [idx.name for idx in pc.list_indexes()]
+    if index_name not in indexes:
+        print(f"Creating Pinecone index: {index_name}")
+        from pinecone import ServerlessSpec
+        pc.create_index(
+            name=index_name,
+            dimension=dimension,
+            metric="cosine",
+            spec=ServerlessSpec(cloud="aws", region="us-east-1")
+        )
+    else:
+        # Clear existing vectors to start fresh if rebuild is clicked
+        try:
+            index = pc.Index(index_name)
+            index.delete(delete_all=True, namespace="course_materials")
+            print("Cleared existing vectors in course_materials namespace for full rebuild.")
+        except Exception as delete_error:
+            print(f"Warning: Could not clear index before rebuild: {str(delete_error)}")
+
+    embeddings = get_embeddings_model()
+    
+    print(f"Writing {len(all_chunks)} chunks to Pinecone index...")
+    vectorstore = PineconeVectorStore.from_texts(
+        texts=all_chunks,
+        embedding=embeddings,
+        metadatas=all_metadatas,
+        index_name=index_name,
+        namespace="course_materials"
+    )
+    return vectorstore
 
 def append_to_pdf(question, answer):
     """Append question and answer to extra.pdf in Cloudinary"""

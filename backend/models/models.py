@@ -259,3 +259,47 @@ class StudentProfile:
         )
         return result.modified_count or result.upserted_id
 
+
+class PDFMetadata:
+    """PDF metadata model for handling course-material configuration details inside MongoDB 'pdfs' collection"""
+    
+    def __init__(self):
+        self.collection = db_instance.get_collection("pdfs")
+
+    def save_pdf_metadata(self, public_id, filename, url, department, semester, subject, academic_year):
+        """Save or update metadata settings for an uploaded PDF in MongoDB"""
+        doc = {
+            "public_id": public_id,
+            "filename": filename,
+            "url": url,
+            "department": department.strip().upper(),
+            "semester": int(semester),
+            "subject": subject.strip(),
+            "academic_year": int(academic_year),
+            "uploaded_at": datetime.datetime.utcnow()
+        }
+        self.collection.update_one(
+            {"public_id": public_id},
+            {"$set": doc},
+            upsert=True
+        )
+
+    def get_pdf_metadata(self, public_id):
+        """Retrieve metadata settings for a specific public_id"""
+        doc = self.collection.find_one({"public_id": public_id})
+        if doc:
+            doc["_id"] = str(doc["_id"])
+        return doc
+
+    def get_all_pdf_metadata(self):
+        """Get all PDF metadata records"""
+        docs = list(self.collection.find({}))
+        for doc in docs:
+            doc["_id"] = str(doc["_id"])
+        return docs
+
+    def delete_pdf_metadata(self, public_id):
+        """Delete PDF metadata record by public_id"""
+        self.collection.delete_one({"public_id": public_id})
+
+

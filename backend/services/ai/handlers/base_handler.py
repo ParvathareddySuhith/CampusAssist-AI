@@ -24,11 +24,20 @@ class BaseHandler:
             
         execution_time = time.time() - start_time
         
-        print("\n" + "="*40)
+        # Extract telemetry details from routing context
+        strategy = "unknown"
+        confidence = 1.0
+        if routing_context:
+            strategy = routing_context.get("strategy", "unknown")
+            confidence = routing_context.get("confidence", 1.0)
+        
+        print("\n" + "="*33)
         print(f"Intent: {self.intent_name}")
         print(f"Handler: {self.handler_name}")
+        print(f"Strategy: {strategy}")
+        print(f"Confidence: {confidence}")
         print(f"Execution Time: {execution_time:.2f}s")
-        print("="*40 + "\n")
+        print("="*33 + "\n")
         
         return result, status_code
 

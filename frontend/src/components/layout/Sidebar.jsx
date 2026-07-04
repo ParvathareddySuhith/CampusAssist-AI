@@ -52,8 +52,8 @@ function Sidebar({ isOpen, toggleSidebar, handleLogout, profile }) {
             <NavItem to="/dashboard" icon={<FaHome />} label="Dashboard" />
             <NavItem to="/assistant" icon={<FaRobot />} label="AI Assistant" />
             <NavItem to="/documents" icon={<FaFileAlt />} label="Documents" />
-            <NavItem to="#" icon={<FaBook />} label="Study Assistant" disabled={true} />
-            <NavItem to="#" icon={<FaBriefcase />} label="Placement Assistant" disabled={true} />
+            <NavItem to="/study-assistant" icon={<FaBook />} label="Study Assistant" />
+            <NavItem to="/placement-assistant" icon={<FaBriefcase />} label="Placement Assistant" />
             <NavItem to="/profile" icon={<FaUser />} label="Profile" />
           </nav>
         </div>

@@ -10,6 +10,8 @@ import LoginAdmin from './components/LoginAdmin';
 import Admin from './components/Admin';
 import UserLogin from './components/UserLogin';
 import UserSignUp from './components/UserSignUp';
+import StudyAssistantPage from "./components/StudyAssistantPage";
+import PlacementAssistantPage from "./components/PlacementAssistantPage";
 
 // Auth checks
 const isAdminAuthenticated = () => localStorage.getItem('adminToken') !== null;
@@ -36,6 +38,8 @@ function App() {
           <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/study-assistant" element={<StudyAssistantPage />} />
+          <Route path="/placement-assistant" element={<PlacementAssistantPage />} />
         </Route>
         
         {/* User auth routes */}

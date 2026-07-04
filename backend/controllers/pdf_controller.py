@@ -15,7 +15,7 @@ class PDFController:
         return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'pdf'
     
     def upload_pdf(self):
-        """Upload a PDF file to Cloudinary"""
+        """Upload a PDF file to Cloudinary and store its metadata in MongoDB"""
         try:
             # Check if request contains a file
             if 'file' not in request.files:
@@ -31,14 +31,53 @@ class PDFController:
             if not self.allowed_file(file.filename):
                 return jsonify({'error': 'Only PDF files are allowed'}), 400
             
+            # Extract metadata from request form parameters
+            department = request.form.get('department', '').strip().upper()
+            semester_raw = request.form.get('semester')
+            subject = request.form.get('subject', '').strip()
+            academic_year_raw = request.form.get('academic_year')
+
+            if not department or not semester_raw or not subject or not academic_year_raw:
+                return jsonify({'error': 'Missing required metadata parameters: department, semester, subject, and academic_year are all required.'}), 400
+
+            try:
+                semester = int(semester_raw)
+                if not (1 <= semester <= 8):
+                    return jsonify({'error': 'Semester must be between 1 and 8.'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Semester must be an integer.'}), 400
+
+            try:
+                academic_year = int(academic_year_raw)
+                if not (1 <= academic_year <= 4):
+                    return jsonify({'error': 'Academic Year must be between 1 and 4.'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Academic Year must be an integer.'}), 400
+
             # Upload file to Cloudinary
             upload_result = self.cloudinary_service.upload_pdf(file)
+            public_id = upload_result['public_id']
+            url = upload_result['url']
+            original_filename = upload_result['original_filename']
+
+            # Store metadata document in MongoDB pdfs collection
+            from models.models import PDFMetadata
+            pdf_metadata_model = PDFMetadata()
+            pdf_metadata_model.save_pdf_metadata(
+                public_id=public_id,
+                filename=original_filename,
+                url=url,
+                department=department,
+                semester=semester,
+                subject=subject,
+                academic_year=academic_year
+            )
             
-            # Create PDF object
+            # Create PDF object representation
             pdf = PDF(
-                public_id=upload_result['public_id'],
-                original_filename=upload_result['original_filename'],
-                url=upload_result['url'],
+                public_id=public_id,
+                original_filename=original_filename,
+                url=url,
                 created_at=upload_result.get('created_at'),
                 resource_type=upload_result.get('resource_type'),
                 bytes=upload_result.get('bytes')
@@ -47,7 +86,13 @@ class PDFController:
             # Return success response
             return jsonify({
                 'message': 'PDF uploaded successfully',
-                'pdf': pdf.to_dict()
+                'pdf': {
+                    **pdf.to_dict(),
+                    'department': department,
+                    'semester': semester,
+                    'subject': subject,
+                    'academic_year': academic_year
+                }
             }), 201
             
         except Exception as e:
@@ -78,15 +123,17 @@ class PDFController:
             return jsonify({'error': f'Error listing PDFs: {str(e)}'}), 500
     
     def delete_pdf(self, public_id):
-        """Delete a PDF from Cloudinary"""
+        """Delete a PDF from Cloudinary and clear MongoDB metadata"""
         try:
             # Delete PDF from Cloudinary
             result = self.cloudinary_service.delete_pdf(public_id)
             
-            if result.get('result') == 'ok':
-                return jsonify({'message': 'PDF deleted successfully'}), 200
-            else:
-                return jsonify({'error': 'Failed to delete PDF'}), 400
+            # Delete from MongoDB pdfs collection
+            from models.models import PDFMetadata
+            pdf_metadata_model = PDFMetadata()
+            pdf_metadata_model.delete_pdf_metadata(public_id)
+            
+            return jsonify({'message': 'PDF deleted successfully'}), 200
             
         except Exception as e:
             current_app.logger.error(f"Error deleting PDF: {str(e)}")

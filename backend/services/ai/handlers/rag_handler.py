@@ -1,22 +1,77 @@
 import warnings
+import time
+from typing import List, Dict, Any
 from services.ai.handlers.base_handler import BaseHandler
 from langchain_classic.chains import ConversationalRetrievalChain
 from langchain_classic.memory import ConversationBufferMemory
 from langchain_core.prompts.chat import ChatPromptTemplate
+from langchain_core.retrievers import BaseRetriever
+from langchain_core.callbacks import CallbackManagerForRetrieverRun
+from langchain_core.documents import Document
 from config.config import Config
 
 # Re-use conversation memories and template from chat_service to maintain session memory
 from services.chat_service import conversation_memories, template, retry_with_exponential_backoff
 
+
+class SmartMetadataRetriever(BaseRetriever):
+    """Custom LangChain Retriever that filters by student profile metadata with automatic fallback"""
+    
+    vectorstore: Any
+    filter_dict: Dict[str, Any]
+
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun = None
+    ) -> List[Document]:
+        docs = []
+        
+        # 1. Attempt metadata-filtered search
+        if self.filter_dict:
+            try:
+                print(f"[Smart RAG] Executing filtered search in Pinecone: {self.filter_dict}")
+                docs = self.vectorstore.similarity_search(query, k=10, filter=self.filter_dict)
+            except Exception as e:
+                print(f"[Smart RAG] Filtered similarity search failed: {str(e)}")
+        
+        # 2. Fallback to unrestricted search if no docs found
+        fallback_used = False
+        if not docs:
+            print("[Smart RAG] No documents matched filter criteria. Performing unrestricted fallback search...")
+            try:
+                docs = self.vectorstore.similarity_search(query, k=10)
+                fallback_used = True
+            except Exception as fallback_err:
+                print(f"[Smart RAG] Unrestricted fallback search failed: {str(fallback_err)}")
+                docs = []
+
+        # Log Smart RAG Telemetry
+        dept = self.filter_dict.get("department", "None")
+        sem = self.filter_dict.get("semester", "None")
+        subject = self.filter_dict.get("subject", "None")
+        
+        retrieved_docs = list(set([d.metadata.get("source", "unknown") for d in docs]))
+        
+        print("\n" + "="*50)
+        print("[SMART RAG TELEMETRY LOG]")
+        print(f"Department: {dept}")
+        print(f"Semester: {sem}")
+        print(f"Subject Filter: {subject}")
+        print(f"Retrieved Documents: {retrieved_docs}")
+        print(f"Fallback Used: {fallback_used}")
+        print("="*50 + "\n")
+        
+        return docs
+
+
 class RAGHandler(BaseHandler):
-    """Handler for executing queries through the RAG pipeline"""
+    """Handler for executing queries through the metadata-aware smart RAG pipeline"""
     
     def __init__(self, vectorstore):
         super().__init__(vectorstore)
         self.intent_name = "RAG"
         self.handler_name = "RAGHandler"
 
-    def get_conversation_chain(self, session_id):
+    def get_conversation_chain(self, session_id, routing_context=None):
         """Create or retrieve a conversation chain for a session"""
         if session_id not in conversation_memories:
             with warnings.catch_warnings():
@@ -40,10 +95,22 @@ class RAGHandler(BaseHandler):
             max_retries=3
         )
 
-        retriever = self.vectorstore.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": 10}
-        )
+        # Build filter from profile metadata
+        filter_dict = {}
+        if routing_context:
+            profile = routing_context.get("context", {}).get("profile")
+            if profile:
+                dept = profile.get("department")
+                sem = profile.get("semester")
+                if dept:
+                    filter_dict["department"] = dept.strip().upper()
+                if sem:
+                    try:
+                        filter_dict["semester"] = int(sem)
+                    except (ValueError, TypeError):
+                        pass
+
+        retriever = SmartMetadataRetriever(vectorstore=self.vectorstore, filter_dict=filter_dict)
 
         return ConversationalRetrievalChain.from_llm(
             llm=llm,
@@ -61,7 +128,7 @@ class RAGHandler(BaseHandler):
                 "session_id": session_id
             }, 503
 
-        chat_chain = self.get_conversation_chain(session_id)
+        chat_chain = self.get_conversation_chain(session_id, routing_context)
         
         @retry_with_exponential_backoff(max_retries=3, base_delay=2)
         def call_chain():
