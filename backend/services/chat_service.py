@@ -250,6 +250,9 @@ class ChatService:
             request_context = self.context_builder.build_context(question, user_id, session_id)
             handler, routing_context = self.router.resolve(request_context)
             
+            if routing_context is not None:
+                routing_context["personalization"] = request_context.personalization
+            
             return handler.handle(
                 question=request_context.question,
                 session_id=request_context.session_id,

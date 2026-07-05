@@ -24,20 +24,32 @@ class BaseHandler:
             
         execution_time = time.time() - start_time
         
-        # Extract telemetry details from routing context
-        strategy = "unknown"
-        confidence = 1.0
-        if routing_context:
-            strategy = routing_context.get("strategy", "unknown")
-            confidence = routing_context.get("confidence", 1.0)
+        # Extract personalization details for telemetry
+        personalization = routing_context.get("personalization", {}) if routing_context else {}
+        runtime = personalization.get("runtime", {})
+        profile = personalization.get("profile", {})
+        has_profile = runtime.get("has_profile", False)
+        
+        # Check if personalization was applicable for this handler and applied
+        intent = self.intent_name
+        personalization_applicable = intent in ["ACADEMIC", "CAMPUS", "PLACEMENT", "DOCUMENT"]
+        personalized_str = "YES" if (has_profile and personalization_applicable) else "NO"
         
         print("\n" + "="*33)
-        print(f"Intent: {self.intent_name}")
-        print(f"Handler: {self.handler_name}")
-        print(f"Strategy: {strategy}")
-        print(f"Confidence: {confidence}")
-        print(f"Execution Time: {execution_time:.2f}s")
-        print("="*33 + "\n")
+        print(f"Intent : {self.intent_name}")
+        print(f"Handler : {self.handler_name}")
+        print(f"Personalized : {personalized_str}")
+        if has_profile and personalization_applicable:
+            print(f"Department : {profile.get('department', 'N/A')}")
+            print(f"Semester : {profile.get('semester', 'N/A')}")
+        print(f"Execution : {execution_time:.2f} s")
+        print("="*33)
+        
+        if personalization:
+            print(f"[Telemetry] Personalization Dict: {personalization}")
+            print("="*33 + "\n")
+        else:
+            print("="*33 + "\n")
         
         return result, status_code
 

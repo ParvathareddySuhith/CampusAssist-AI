@@ -37,7 +37,12 @@ class ContextBuilder:
             "has_profile": profile is not None
         }
 
-        # 4. Construct and return RequestContext dataclass
+        # 4. Generate personalization details
+        from services.personalization.context_personalizer import ContextPersonalizer
+        personalizer = ContextPersonalizer()
+        personalization = personalizer.personalize(profile)
+
+        # 5. Construct and return RequestContext dataclass
         return RequestContext(
             question=question,
             user_id=user_id,
@@ -45,5 +50,6 @@ class ContextBuilder:
             timestamp=datetime.datetime.utcnow(),
             profile=profile,
             conversation_history=conversation_history,
-            request_metadata=request_metadata
+            request_metadata=request_metadata,
+            personalization=personalization
         )

@@ -110,13 +110,20 @@ class RAGHandler(BaseHandler):
                     except (ValueError, TypeError):
                         pass
 
+        # Build personalization system instruction prompt
+        from services.personalization.prompt_builder import PromptBuilder
+        personalization = routing_context.get("personalization", {}) if routing_context else {}
+        p_prompt = PromptBuilder.build(personalization)
+        
+        custom_template = p_prompt + template if p_prompt else template
+
         retriever = SmartMetadataRetriever(vectorstore=self.vectorstore, filter_dict=filter_dict)
 
         return ConversationalRetrievalChain.from_llm(
             llm=llm,
             retriever=retriever,
             memory=memory,
-            combine_docs_chain_kwargs={"prompt": ChatPromptTemplate.from_template(template)}
+            combine_docs_chain_kwargs={"prompt": ChatPromptTemplate.from_template(custom_template)}
         )
 
     def _execute(self, question, session_id, user_id=None, routing_context=None):

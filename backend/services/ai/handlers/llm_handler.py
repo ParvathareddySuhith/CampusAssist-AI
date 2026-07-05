@@ -42,6 +42,11 @@ class LLMHandler(BaseHandler):
             max_retries=3
         )
 
+        # Build personalization system instruction prompt
+        from services.personalization.prompt_builder import PromptBuilder
+        personalization = routing_context.get("personalization", {}) if routing_context else {}
+        p_prompt = PromptBuilder.build(personalization)
+
         history_messages = memory.chat_memory.messages
         messages = [("system", self.system_prompt)]
         for msg in history_messages:
@@ -49,6 +54,10 @@ class LLMHandler(BaseHandler):
                 messages.append(("human", msg.content))
             else:
                 messages.append(("ai", msg.content))
+                
+        if p_prompt:
+            messages.append(("system", p_prompt))
+            
         messages.append(("human", question))
 
         @retry_with_exponential_backoff(max_retries=3, base_delay=2)
