@@ -9,6 +9,10 @@ class ContextBuilder:
     def __init__(self):
         # Database service layer mapping (easily swappable for ProfileService later)
         self.profile_model = StudentProfile()
+        from services.memory.memory_manager import ConversationMemoryManager
+        self.memory_manager = ConversationMemoryManager()
+        from services.context.conversation_context_builder import ConversationContextBuilder
+        self.context_builder_memory = ConversationContextBuilder()
 
     def build_context(self, question: str, user_id: Optional[str], session_id: str) -> RequestContext:
         """Gathers student profile, history, timestamps, and returns RequestContext"""
@@ -42,7 +46,14 @@ class ContextBuilder:
         personalizer = ContextPersonalizer()
         personalization = personalizer.personalize(profile)
 
-        # 5. Construct and return RequestContext dataclass
+        # 5. Fetch recent interactions from conversation memory
+        memory = self.memory_manager.get_memory(session_id)
+        recent_interactions = memory.get_recent_interactions()
+
+        # 6. Generate conversation context
+        conversation_context = self.context_builder_memory.build_context(recent_interactions, question)
+
+        # 7. Construct and return RequestContext dataclass
         return RequestContext(
             question=question,
             user_id=user_id,
@@ -51,5 +62,7 @@ class ContextBuilder:
             profile=profile,
             conversation_history=conversation_history,
             request_metadata=request_metadata,
-            personalization=personalization
+            personalization=personalization,
+            recent_interactions=recent_interactions,
+            conversation_context=conversation_context
         )

@@ -78,12 +78,20 @@ class ChatService:
         # Initialize intent handlers registry once (Dependency Injection)
         from services.ai.registry import HANDLER_REGISTRY
         from services.ai.router import AIRouter
+        from services.recommendation.recommendation_engine import RecommendationEngine
+        from services.analytics.memory_store import MemoryAnalyticsStore
+        from services.analytics.learning_analytics import LearningAnalyticsEngine
         
         self.handlers = {
             intent: handler_class(vectorstore)
             for intent, handler_class in HANDLER_REGISTRY.items()
         }
         self.router = AIRouter(self.handlers)
+        self.recommendation_engine = RecommendationEngine()
+        
+        # Initialize learning analytics engine with in-memory store
+        self.analytics_store = MemoryAnalyticsStore()
+        self.analytics_engine = LearningAnalyticsEngine(self.analytics_store)
     
     def _get_llm(self):
         """Get LLM instance based on configured provider"""
@@ -252,13 +260,42 @@ class ChatService:
             
             if routing_context is not None:
                 routing_context["personalization"] = request_context.personalization
+                routing_context["request_context"] = request_context
             
-            return handler.handle(
+            result, status_code = handler.handle(
                 question=request_context.question,
                 session_id=request_context.session_id,
                 user_id=request_context.user_id,
                 routing_context=routing_context
             )
+            
+            # Record successfully completed interaction in session history
+            if status_code == 200 and isinstance(result, dict) and "answer" in result:
+                raw_ans = result.get("raw_answer") or result.get("answer")
+                self.context_builder.memory_manager.add_interaction(
+                    session_id=session_id,
+                    question=question,
+                    answer=raw_ans
+                )
+                
+                # Set resolved intent on request_context
+                intent_val = routing_context.get("intent", "GENERAL") if routing_context else "GENERAL"
+                request_context.intent = intent_val
+                
+                # Generate rule-based recommendations statelessly as a post-processing step
+                try:
+                    recommendations = self.recommendation_engine.generate(request_context)
+                    result["recommendations"] = recommendations.to_dict()
+                except Exception as rec_err:
+                    print(f"[Recommendation Engine] Error generating: {str(rec_err)}")
+                
+                # Record successful interaction in the learning analytics engine
+                try:
+                    self.analytics_engine.record_event(request_context, result)
+                except Exception as ana_err:
+                    print(f"[Learning Analytics Engine] Error recording event: {str(ana_err)}")
+                
+            return result, status_code
             
         except Exception as e:
             error_msg = f"Error processing query: {str(e)}"

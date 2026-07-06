@@ -42,23 +42,39 @@ class LLMHandler(BaseHandler):
             max_retries=3
         )
 
-        # Build personalization system instruction prompt
+        # Retrieve RequestContext from routing_context
+        request_context = None
+        if routing_context:
+            request_context = routing_context.get("request_context")
+
+        personalization = {}
+        conversation_context = ""
+        if request_context:
+            personalization = request_context.personalization
+            conversation_context = request_context.conversation_context
+
+        # Assemble prompt payload via PromptBuilder
         from services.personalization.prompt_builder import PromptBuilder
-        personalization = routing_context.get("personalization", {}) if routing_context else {}
-        p_prompt = PromptBuilder.build(personalization)
+        payload = PromptBuilder.build_prompt(
+            question=question,
+            intent=self.intent_name,
+            personalization=personalization,
+            conversation_context=conversation_context
+        )
 
         history_messages = memory.chat_memory.messages
-        messages = [("system", self.system_prompt)]
+        # 1. Start with system prompt from payload
+        messages = [("system", payload.system_prompt)]
+        
+        # 2. Append history
         for msg in history_messages:
             if msg.type == "human" or msg.type == "user":
                 messages.append(("human", msg.content))
             else:
                 messages.append(("ai", msg.content))
                 
-        if p_prompt:
-            messages.append(("system", p_prompt))
-            
-        messages.append(("human", question))
+        # 3. Append user query (with conversation context)
+        messages.append(("human", payload.user_prompt))
 
         @retry_with_exponential_backoff(max_retries=3, base_delay=2)
         def call_llm():

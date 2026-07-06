@@ -1,0 +1,5 @@
+# Learning Analytics package
+from services.analytics.analytics_models import LearningEvent, LearningSummary
+from services.analytics.analytics_store import AnalyticsStore
+from services.analytics.memory_store import MemoryAnalyticsStore
+from services.analytics.learning_analytics import LearningAnalyticsEngine

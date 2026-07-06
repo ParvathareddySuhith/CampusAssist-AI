@@ -110,12 +110,28 @@ class RAGHandler(BaseHandler):
                     except (ValueError, TypeError):
                         pass
 
-        # Build personalization system instruction prompt
+        # Retrieve RequestContext from routing_context
+        request_context = None
+        if routing_context:
+            request_context = routing_context.get("request_context")
+
+        personalization = {}
+        conversation_context = ""
+        if request_context:
+            personalization = request_context.personalization
+            conversation_context = request_context.conversation_context
+
+        # Assemble prompt payload via PromptBuilder
         from services.personalization.prompt_builder import PromptBuilder
-        personalization = routing_context.get("personalization", {}) if routing_context else {}
-        p_prompt = PromptBuilder.build(personalization)
+        payload = PromptBuilder.build_prompt(
+            question="{question}",
+            intent=self.intent_name,
+            personalization=personalization,
+            conversation_context=conversation_context,
+            retrieved_context="{context}"
+        )
         
-        custom_template = p_prompt + template if p_prompt else template
+        custom_template = f"{payload.system_prompt}\n\n{payload.user_prompt}"
 
         retriever = SmartMetadataRetriever(vectorstore=self.vectorstore, filter_dict=filter_dict)
 

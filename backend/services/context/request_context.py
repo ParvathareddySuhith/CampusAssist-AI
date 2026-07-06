@@ -15,4 +15,7 @@ class RequestContext:
     routing_context: Dict[str, Any] = field(default_factory=dict)
     request_metadata: Dict[str, Any] = field(default_factory=dict)
     personalization: Dict[str, Any] = field(default_factory=dict)
+    recent_interactions: List[Dict[str, Any]] = field(default_factory=list)
+    conversation_context: str = ""
+    intent: str = "GENERAL"
     debug_info: Dict[str, Any] = field(default_factory=dict)

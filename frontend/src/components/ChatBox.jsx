@@ -13,6 +13,7 @@ import { BiExpandAlt, BiCollapseAlt } from "react-icons/bi"; // Added resize ico
 import { FiLogOut, FiLogIn } from "react-icons/fi"; // More distinct login/logout icons
 import { getChatHistory, submitQuery } from "../lib/api";
 import { format } from "date-fns";
+import RecommendationSection from "./recommendations/RecommendationSection";
 
 function ChatBox({ onClose, isStandalone = false }) {
   const navigate = useNavigate();
@@ -189,6 +190,27 @@ function ChatBox({ onClose, isStandalone = false }) {
     }
   };
 
+  const handleRecommendationClick = (action, title) => {
+    if (!action) return;
+    
+    if (action.startsWith("/")) {
+      navigate(action);
+      if (onClose) onClose();
+    } else if (action === "explain") {
+      setMessage(`Explain ${title}`);
+      const textarea = document.getElementById("message");
+      if (textarea) {
+        textarea.focus();
+      }
+    } else if (action === "ask") {
+      setMessage(title);
+      const textarea = document.getElementById("message");
+      if (textarea) {
+        textarea.focus();
+      }
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!message.trim() || isTyping) return;
 
@@ -223,6 +245,7 @@ function ChatBox({ onClose, isStandalone = false }) {
       setChatHistory((prev) => {
         const updated = [...prev];
         updated[updated.length - 1].response = responseText;
+        updated[updated.length - 1].recommendations = response.recommendations;
         return updated;
       });
       
@@ -588,6 +611,13 @@ function ChatBox({ onClose, isStandalone = false }) {
                           <span dangerouslySetInnerHTML={{ __html: chat.response }} />
                         )}
                       </div>
+                      
+                      {chat.recommendations && (!chat.id || !typingText[chat.id] || typingText[chat.id].completed) && (
+                        <RecommendationSection
+                          recommendations={chat.recommendations}
+                          onCardClick={handleRecommendationClick}
+                        />
+                      )}
                     </div>
                   ) : (
                     <div className="mr-8">

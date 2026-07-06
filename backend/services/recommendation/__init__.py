@@ -1,0 +1,3 @@
+# Recommendation Engine package
+from services.recommendation.recommendation_models import RecommendationItem, RecommendationResult
+from services.recommendation.recommendation_engine import RecommendationEngine
