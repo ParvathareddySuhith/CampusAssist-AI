@@ -12,6 +12,7 @@ import UserLogin from './components/UserLogin';
 import UserSignUp from './components/UserSignUp';
 import StudyAssistantPage from "./components/StudyAssistantPage";
 import PlacementAssistantPage from "./components/PlacementAssistantPage";
+import LearningDashboard from "./components/LearningDashboard";
 
 // Auth checks
 const isAdminAuthenticated = () => localStorage.getItem('adminToken') !== null;
@@ -40,6 +41,7 @@ function App() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/study-assistant" element={<StudyAssistantPage />} />
           <Route path="/placement-assistant" element={<PlacementAssistantPage />} />
+          <Route path="/learning-dashboard" element={<LearningDashboard />} />
         </Route>
         
         {/* User auth routes */}

@@ -5,7 +5,8 @@ import {
   FaFileAlt, 
   FaHistory, 
   FaChevronRight, 
-  FaArrowRight
+  FaArrowRight,
+  FaChartLine
 } from "react-icons/fa";
 import { getChatHistory } from "../lib/api";
 
@@ -143,6 +144,29 @@ function Portal() {
               <FaChevronRight className="w-3 h-3" />
             </button>
           </SpotlightCard>
+
+          {/* Card 5: Learning Dashboard */}
+          <SpotlightCard 
+            className="p-6 bg-neutral-900/60 border border-neutral-800 rounded-xl hover:border-blue-500/30 transition-all flex flex-col justify-between h-48"
+            spotlightColor="rgba(59, 130, 246, 0.15)"
+          >
+            <div>
+              <div className="flex items-center space-x-3 mb-3">
+                <span className="text-2xl">📈</span>
+                <h3 className="text-lg font-bold text-white">Learning Dashboard</h3>
+              </div>
+              <p className="text-neutral-450 text-sm leading-relaxed">
+                View your study focus, question stats, and personalized learning insights.
+              </p>
+            </div>
+            <button 
+              onClick={() => navigate("/learning-dashboard")}
+              className="w-fit mt-4 px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white rounded-lg text-sm font-medium transition-all cursor-pointer shadow-md flex items-center space-x-1.5"
+            >
+              <span>Open Dashboard</span>
+              <FaChevronRight className="w-3 h-3" />
+            </button>
+          </SpotlightCard>
         </div>
 
         {/* Right Side: Recent chats & quick actions */}
@@ -222,6 +246,15 @@ function Portal() {
                   className="w-full flex items-center justify-between p-2.5 rounded-lg bg-neutral-900/60 hover:bg-neutral-800/80 border border-neutral-800 hover:border-neutral-700 text-sm text-left transition-all text-emerald-400 font-medium cursor-pointer"
                 >
                   <span>• Placement Assistant</span>
+                  <FaArrowRight className="w-3.5 h-3.5 opacity-60" />
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => navigate("/learning-dashboard")}
+                  className="w-full flex items-center justify-between p-2.5 rounded-lg bg-neutral-900/60 hover:bg-neutral-800/80 border border-neutral-800 hover:border-neutral-700 text-sm text-left transition-all text-blue-400 font-medium cursor-pointer"
+                >
+                  <span>• Learning Dashboard</span>
                   <FaArrowRight className="w-3.5 h-3.5 opacity-60" />
                 </button>
               </li>

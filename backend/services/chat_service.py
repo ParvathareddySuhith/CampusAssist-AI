@@ -93,6 +93,16 @@ class ChatService:
         from services.analytics.memory_store import global_memory_store
         self.analytics_store = global_memory_store
         self.analytics_engine = LearningAnalyticsEngine(self.analytics_store)
+
+        # Initialize learning path engine
+        from services.learning_path.learning_path_engine import LearningPathEngine
+        self.learning_path_engine = LearningPathEngine()
+
+        # Initialize learning progress engine
+        from services.learning_progress.learning_progress_store import global_progress_store
+        from services.learning_progress.learning_progress_engine import LearningProgressEngine
+        self.progress_store = global_progress_store
+        self.progress_engine = LearningProgressEngine(self.progress_store)
     
     def _get_llm(self):
         """Get LLM instance based on configured provider"""
@@ -295,6 +305,19 @@ class ChatService:
                     self.analytics_engine.record_event(request_context, result)
                 except Exception as ana_err:
                     print(f"[Learning Analytics Engine] Error recording event: {str(ana_err)}")
+
+                # Generate learning path if intent is ACADEMIC
+                if request_context.intent == "ACADEMIC":
+                    try:
+                        learning_path = self.learning_path_engine.generate_learning_path(request_context)
+                        result["learning_path"] = learning_path.to_dict()
+
+                        # Retrieve or initialize study progress for this user & topic
+                        user_id_val = request_context.user_id or "guest_user"
+                        progress = self.progress_engine.get_or_initialize_progress(user_id_val, learning_path)
+                        result["progress"] = self.progress_engine.format_progress_response(progress, learning_path)
+                    except Exception as lp_err:
+                        print(f"[Learning Path Engine] Error generating learning path/progress: {str(lp_err)}")
                 
             return result, status_code
             

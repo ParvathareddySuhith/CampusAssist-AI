@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import NavItem from "../navigation/NavItem";
-import { FaHome, FaRobot, FaFileAlt, FaBook, FaBriefcase, FaUser, FaCog } from "react-icons/fa";
+import { FaHome, FaRobot, FaFileAlt, FaBook, FaBriefcase, FaUser, FaCog, FaChartLine } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
+
 
 function Sidebar({ isOpen, toggleSidebar, handleLogout, profile }) {
   const [username, setUsername] = useState("Suhith");
@@ -53,6 +54,7 @@ function Sidebar({ isOpen, toggleSidebar, handleLogout, profile }) {
             <NavItem to="/assistant" icon={<FaRobot />} label="AI Assistant" />
             <NavItem to="/documents" icon={<FaFileAlt />} label="Documents" />
             <NavItem to="/study-assistant" icon={<FaBook />} label="Study Assistant" />
+            <NavItem to="/learning-dashboard" icon={<FaChartLine />} label="Learning Dashboard" />
             <NavItem to="/placement-assistant" icon={<FaBriefcase />} label="Placement Assistant" />
             <NavItem to="/profile" icon={<FaUser />} label="Profile" />
           </nav>
