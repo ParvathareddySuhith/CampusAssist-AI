@@ -89,8 +89,9 @@ class ChatService:
         self.router = AIRouter(self.handlers)
         self.recommendation_engine = RecommendationEngine()
         
-        # Initialize learning analytics engine with in-memory store
-        self.analytics_store = MemoryAnalyticsStore()
+        # Initialize learning analytics engine with global in-memory store
+        from services.analytics.memory_store import global_memory_store
+        self.analytics_store = global_memory_store
         self.analytics_engine = LearningAnalyticsEngine(self.analytics_store)
     
     def _get_llm(self):

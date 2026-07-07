@@ -34,3 +34,5 @@ class MemoryAnalyticsStore(AnalyticsStore):
         with self._lock:
             if user_id in self._db:
                 self._db[user_id] = []
+
+global_memory_store = MemoryAnalyticsStore()
