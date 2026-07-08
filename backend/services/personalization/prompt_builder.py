@@ -77,7 +77,12 @@ class PromptBuilder:
             else:
                 system_prompt = system_prompt + "\n\n" + p_prompt
 
-        # 3. User Prompt (incorporates conversation context)
+        # 3. Adaptive Personalization Guidance
+        adaptive_guidance = PromptBuilder._build_adaptive_guidance(personalization)
+        if adaptive_guidance:
+            system_prompt = system_prompt + "\n\n" + adaptive_guidance
+
+        # 4. User Prompt (incorporates conversation context)
         if conversation_context:
             user_prompt = f"{conversation_context}Current Question:\n{question}"
         else:
@@ -89,3 +94,44 @@ class PromptBuilder:
             is_rag=is_rag,
             retrieved_context=retrieved_context
         )
+
+    @staticmethod
+    def _build_adaptive_guidance(personalization: Dict[str, Any]) -> str:
+        """Constructs an instruction block guiding the LLM to dynamically adapt to the student's learning history"""
+        if not personalization:
+            return ""
+            
+        learning_profile = personalization.get("learning_profile", {})
+        if not learning_profile:
+            return ""
+
+        favorite_topics = learning_profile.get("favorite_topics", [])
+        weak_topics = learning_profile.get("weak_topics", [])
+        placement_readiness = learning_profile.get("placement_readiness", "Beginner")
+        study_streak = learning_profile.get("study_streak", 0)
+
+        # Build guidance blocks
+        guidance = [
+            "ADAPTIVE LEARNING PERSONALIZATION GUIDELINES:",
+            "- Acknowledge the student's previous learning history and progress naturally in your tone."
+        ]
+
+        if favorite_topics:
+            guidance.append(f"- The student has shown strong familiarity/interest in: {', '.join(favorite_topics)}. Reference these favorite topics when relevant to the question.")
+        if weak_topics:
+            guidance.append(f"- The student may find these topics challenging: {', '.join(weak_topics)}. Provide extra explanation, clearer analogies, or step-by-step guidance when explaining these concepts.")
+        
+        # Encourage progression based on placement readiness
+        if placement_readiness in ("Intermediate", "Advanced"):
+            guidance.append(f"- The student's placement readiness level is {placement_readiness}. Encourage progression to advanced technical interview prep, coding round challenges, or specific resume refinements when discussing careers.")
+        
+        if study_streak > 0:
+            guidance.append(f"- The student is on a {study_streak}-day study streak! Mention or praise this streak briefly if appropriate to encourage them, but keep it organic.")
+
+        guidance.extend([
+            "- Avoid hardcoding fixed greetings or repeating the same opening line/introduction in every single response.",
+            "- Adapt your explanations dynamically without sounding repetitive, scripted, or forced."
+        ])
+
+        return "\n".join(guidance)
+

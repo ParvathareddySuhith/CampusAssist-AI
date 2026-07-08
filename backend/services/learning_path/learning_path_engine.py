@@ -2,12 +2,11 @@ import re
 from typing import List
 from services.learning_path.learning_path_models import LearningStep, LearningPath
 from services.learning_path.learning_paths import LEARNING_PATHS, GENERIC_PATH_STEPS
-from services.context.request_context import RequestContext
 
 class LearningPathEngine:
     """Core engine that compiles deterministic roadmaps for CS topics using RequestContext"""
 
-    def generate_learning_path(self, request_context: RequestContext) -> LearningPath:
+    def generate_learning_path(self, request_context: "RequestContext") -> LearningPath:
         """Generates a structured LearningPath based on request context"""
         question = request_context.question
         topic = self._detect_topic(question)

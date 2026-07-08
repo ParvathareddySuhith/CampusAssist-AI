@@ -29,6 +29,10 @@ class RecommendationEngine:
         placement = self._generate_placement(request_context)
         next_questions = self._generate_next_questions(request_context)
         
+        # Generate specialized recommendations and extend study_tools list
+        specialized = self._generate_specialized_recommendations(request_context)
+        study_tools.extend(specialized)
+        
         result = RecommendationResult(
             topics=topics,
             documents=documents,
@@ -109,11 +113,34 @@ class RecommendationEngine:
     def _generate_study_tools(self, request_context: RequestContext) -> List[RecommendationItem]:
         intent = request_context.intent
         items = []
+        
+        # Default titles & descriptions
+        quiz_title = "Generate Quiz"
+        quiz_desc = "Take an interactive test on this topic to test your knowledge."
+        flash_title = "Flashcard Review"
+        flash_desc = "Use flashcards to quickly revise core terminology definitions."
+
+        profile = getattr(request_context, "learning_profile", None)
+        if profile and profile.favorite_topics:
+            fav_topic = profile.favorite_topics[0]
+            is_advanced = profile.placement_readiness in ("Intermediate", "Advanced")
+            
+            # Quiz Recommendation
+            if is_advanced:
+                quiz_title = f"Recommend Advanced {fav_topic} Quiz"
+            else:
+                quiz_title = f"Recommend {fav_topic} Quiz"
+            quiz_desc = f"Take an interactive {fav_topic.lower()} quiz."
+            
+            # Flashcards
+            flash_title = f"{fav_topic} Flashcard Review"
+            flash_desc = f"Revise {fav_topic} concepts using flashcards."
+
         if intent in ["ACADEMIC", "DOCUMENT"]:
             items.append(RecommendationItem(
                 id="rec_tool_quiz",
-                title="Generate Quiz",
-                description="Take an interactive test on this topic to test your knowledge.",
+                title=quiz_title,
+                description=quiz_desc,
                 type="quiz",
                 priority="HIGH",
                 action="/study-assistant",
@@ -122,8 +149,8 @@ class RecommendationEngine:
             ))
             items.append(RecommendationItem(
                 id="rec_tool_flash",
-                title="Flashcard Review",
-                description="Use flashcards to quickly revise core terminology definitions.",
+                title=flash_title,
+                description=flash_desc,
                 type="flashcard",
                 priority="MEDIUM",
                 action="/study-assistant",
@@ -135,11 +162,21 @@ class RecommendationEngine:
     def _generate_placement(self, request_context: RequestContext) -> List[RecommendationItem]:
         intent = request_context.intent
         items = []
+        
+        resume_title = "Resume Review"
+        resume_desc = "Analyze your resume with AI to optimize for ATS score keywords."
+        
+        profile = getattr(request_context, "learning_profile", None)
+        if profile and profile.favorite_topics:
+            fav_topic = profile.favorite_topics[0]
+            resume_title = f"Practice {fav_topic} Technical Interview"
+            resume_desc = f"Practice a technical developer interview focused on {fav_topic}."
+
         if intent == "PLACEMENT":
             items.append(RecommendationItem(
                 id="rec_place_resume",
-                title="Resume Review",
-                description="Analyze your resume with AI to optimize for ATS score keywords.",
+                title=resume_title,
+                description=resume_desc,
                 type="roadmap",
                 priority="HIGH",
                 action="/placement-assistant",
@@ -157,6 +194,68 @@ class RecommendationEngine:
                 category="placement"
             ))
         return items
+
+    def _generate_specialized_recommendations(self, request_context: RequestContext) -> List[RecommendationItem]:
+        profile = getattr(request_context, "learning_profile", None)
+        if not profile:
+            return []
+
+        # Combine favorite and weak topics
+        all_topics = set(profile.favorite_topics + profile.weak_topics)
+        
+        # Substring matching (case-insensitive)
+        keywords = {
+            "algorithms",
+            "algorithm",
+            "tree",
+            "trees",
+            "graph",
+            "graphs",
+            "recursion",
+        }
+        
+        has_match = False
+        for topic in all_topics:
+            topic_lower = topic.lower()
+            if any(kw in topic_lower for kw in keywords):
+                has_match = True
+                break
+                
+        if not has_match:
+            return []
+
+        return [
+            RecommendationItem(
+                id="rec_spec_tree",
+                title="Tree Problems",
+                description="Practice problem-solving on Binary Trees and Binary Search Trees.",
+                type="link",
+                priority="HIGH",
+                action="/study-assistant",
+                icon="📝",
+                category="study"
+            ),
+            RecommendationItem(
+                id="rec_spec_graph",
+                title="Graph Flashcards",
+                description="Review Graph concepts, representations, and traversals.",
+                type="flashcard",
+                priority="HIGH",
+                action="/study-assistant",
+                icon="📇",
+                category="study"
+            ),
+            RecommendationItem(
+                id="rec_spec_bfs",
+                title="BFS Quiz",
+                description="Test your understanding of Breadth-First Search algorithms.",
+                type="quiz",
+                priority="HIGH",
+                action="/study-assistant",
+                icon="📝",
+                category="study"
+            )
+        ]
 
     def _generate_next_questions(self, request_context: RequestContext) -> List[RecommendationItem]:
         intent = request_context.intent

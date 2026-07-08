@@ -4,7 +4,6 @@ from typing import List, Dict, Any, Optional
 
 from services.analytics.analytics_store import AnalyticsStore
 from services.analytics.analytics_models import LearningEvent, LearningSummary
-from services.context.request_context import RequestContext
 
 class LearningAnalyticsEngine:
     """Core analytics engine that compiles learning events and aggregates history statelessly"""
@@ -12,7 +11,7 @@ class LearningAnalyticsEngine:
     def __init__(self, store: AnalyticsStore):
         self.store = store
 
-    def record_event(self, request_context: RequestContext, response: Dict[str, Any]) -> None:
+    def record_event(self, request_context: "RequestContext", response: Dict[str, Any]) -> None:
         """Constructs a LearningEvent from query context and logs it via the store"""
         user_id = request_context.user_id or "guest_user"
         session_id = request_context.session_id
