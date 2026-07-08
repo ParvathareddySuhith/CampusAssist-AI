@@ -103,6 +103,13 @@ class ChatService:
         from services.learning_progress.learning_progress_engine import LearningProgressEngine
         self.progress_store = global_progress_store
         self.progress_engine = LearningProgressEngine(self.progress_store)
+
+        # Initialize adaptive learning profile engine
+        from services.adaptive.adaptive_engine import AdaptiveEngine
+        self.adaptive_engine = AdaptiveEngine(
+            analytics_store=self.analytics_store,
+            progress_store=self.progress_store
+        )
     
     def _get_llm(self):
         """Get LLM instance based on configured provider"""
@@ -267,6 +274,18 @@ class ChatService:
 
             # Resolve query using the modular AI Intent Resolver and Context Builder
             request_context = self.context_builder.build_context(question, user_id, session_id)
+            
+            # Generate and attach the adaptive learning profile
+            try:
+                user_id_val = request_context.user_id or "guest_user"
+                learning_profile = self.adaptive_engine.build_profile(user_id_val)
+                request_context.learning_profile = learning_profile
+                request_context.personalization.update({
+                    "learning_profile": learning_profile.to_dict()
+                })
+            except Exception as adp_err:
+                print(f"[Adaptive Engine] Error building profile: {str(adp_err)}")
+
             handler, routing_context = self.router.resolve(request_context)
             
             if routing_context is not None:

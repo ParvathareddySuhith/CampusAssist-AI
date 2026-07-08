@@ -41,7 +41,10 @@ class LearningAnalyticsEngine:
             response_type=strategy,
             response_time_ms=latency,
             success=True,
-            metadata={"question_length": len(request_context.question)}
+            metadata={
+                "question_length": len(request_context.question),
+                "question": request_context.question
+            }
         )
 
         self.store.add_event(event)

@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 import datetime
 from typing import Optional, List, Dict, Any
+from services.adaptive.learning_profile import LearningProfile
 
 @dataclass
 class RequestContext:
@@ -19,3 +20,5 @@ class RequestContext:
     conversation_context: str = ""
     intent: str = "GENERAL"
     debug_info: Dict[str, Any] = field(default_factory=dict)
+    learning_profile: Optional[LearningProfile] = None
+
