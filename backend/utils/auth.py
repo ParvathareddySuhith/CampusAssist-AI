@@ -55,7 +55,7 @@ def generate_user_token(user_id):
     """Generate JWT token for user"""
     payload = {
         'user_id': str(user_id),
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24)
     }
     return jwt.encode(payload, Config.SECRET_KEY, algorithm='HS256')
 
@@ -63,7 +63,7 @@ def generate_admin_token():
     """Generate JWT token for admin"""
     payload = {
         'role': 'admin',
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24)
     }
     return jwt.encode(payload, Config.SECRET_KEY, algorithm='HS256')
 

@@ -22,7 +22,7 @@ def test_learning_path_engine():
             question=question,
             user_id=user_id,
             session_id="session_123",
-            timestamp=datetime.datetime.utcnow(),
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
             intent=intent_val
         )
 

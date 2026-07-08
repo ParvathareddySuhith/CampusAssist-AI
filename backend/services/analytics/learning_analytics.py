@@ -15,7 +15,7 @@ class LearningAnalyticsEngine:
         """Constructs a LearningEvent from query context and logs it via the store"""
         user_id = request_context.user_id or "guest_user"
         session_id = request_context.session_id
-        timestamp = datetime.datetime.utcnow()
+        timestamp = datetime.datetime.now(datetime.timezone.utc)
         intent = request_context.intent
 
         # Extract topic from question using keywords

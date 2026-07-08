@@ -38,7 +38,7 @@ class TestAdaptiveProfile(unittest.TestCase):
 
     def test_streak_calculation(self):
         """Tests the streak heuristic with various date patterns"""
-        today = datetime.datetime.utcnow()
+        today = datetime.datetime.now(datetime.timezone.utc)
         yesterday = today - datetime.timedelta(days=1)
         two_days_ago = today - datetime.timedelta(days=2)
         four_days_ago = today - datetime.timedelta(days=4)
@@ -70,7 +70,7 @@ class TestAdaptiveProfile(unittest.TestCase):
     def test_confidence_score_calculation(self):
         """Tests the confidence formula behavior with different number of events, streaks, and progress records"""
         # Scenario: 3 events, 2 days streak, 1 active topic progress
-        today = datetime.datetime.utcnow()
+        today = datetime.datetime.now(datetime.timezone.utc)
         yesterday = today - datetime.timedelta(days=1)
         
         events = [
@@ -96,7 +96,7 @@ class TestAdaptiveProfile(unittest.TestCase):
 
     def test_favorite_topics_heuristic(self):
         """Tests strongest topic scoring based on frequencies and progress bonuses"""
-        today = datetime.datetime.utcnow()
+        today = datetime.datetime.now(datetime.timezone.utc)
         # Topic A: 3 events, 0 progress
         # Topic B: 2 events, 80% progress
         # Topic C: 1 event, 0 progress
@@ -129,7 +129,7 @@ class TestAdaptiveProfile(unittest.TestCase):
 
     def test_weak_topics_heuristic(self):
         """Tests weak topics classification based on error rates and latency"""
-        today = datetime.datetime.utcnow()
+        today = datetime.datetime.now(datetime.timezone.utc)
         # DBMS: has failed event (error rate > 0)
         # Java: slow average response time (3000ms)
         events = [
@@ -146,7 +146,7 @@ class TestAdaptiveProfile(unittest.TestCase):
 
     def test_preferred_mode_detection(self):
         """Tests that query keywords correctly flag study mode preferences"""
-        today = datetime.datetime.utcnow()
+        today = datetime.datetime.now(datetime.timezone.utc)
         events = [
             # Two flashcard references
             LearningEvent(self.user_id, "s1", today, "ACADEMIC", "DBMS", "LLM", 100, True, {"question": "Can you give me flashcards for DBMS?"}),
@@ -162,7 +162,7 @@ class TestAdaptiveProfile(unittest.TestCase):
 
     def test_placement_readiness_and_assistant(self):
         """Verifies readiness transitions and preferred assistant intents mapping"""
-        today = datetime.datetime.utcnow()
+        today = datetime.datetime.now(datetime.timezone.utc)
         # 5 placement events -> Readiness: Intermediate. Preferred assistant: Placement Assistant
         for i in range(5):
             self.analytics_store.add_event(
@@ -193,7 +193,7 @@ class TestAdaptiveProfile(unittest.TestCase):
             
             # Let's add some analytics events for user_id to simulate profile building
             # 4 PLACEMENT events -> Readiness: Intermediate. Preferred assistant: Placement Assistant.
-            today = datetime.datetime.utcnow()
+            today = datetime.datetime.now(datetime.timezone.utc)
             for i in range(4):
                 chat_service.analytics_store.add_event(
                     LearningEvent(

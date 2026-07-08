@@ -19,7 +19,7 @@ class AnalyticsController:
             events = self.analytics_engine.store.get_events(user_id)
             
             # 1. Calculate questions asked today (UTC timezone matched)
-            today_utc = datetime.datetime.utcnow().date()
+            today_utc = datetime.datetime.now(datetime.timezone.utc).date()
             questions_today = sum(1 for e in events if e.timestamp.date() == today_utc)
             
             # 2. Calculate current session activity matching active session_id query param

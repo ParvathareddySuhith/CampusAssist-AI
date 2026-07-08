@@ -14,7 +14,7 @@ class User:
             "username": username,
             "email": email,
             "password": hashed_password,
-            "created_at": datetime.datetime.utcnow()
+            "created_at": datetime.datetime.now(datetime.timezone.utc)
         }
         result = self.collection.insert_one(user_data)
         return result.inserted_id
@@ -47,7 +47,7 @@ class Query:
             "question": question,
             "answered": answered,
             "user_id": ObjectId(user_id) if user_id else None,
-            "timestamp": datetime.datetime.utcnow()
+            "timestamp": datetime.datetime.now(datetime.timezone.utc)
         }
         print(query_data)
         result = self.collection.insert_one(query_data)
@@ -104,7 +104,7 @@ class ChatHistory:
             "user_id": ObjectId(user_id),
             "question": question,
             "answer": answer,
-            "timestamp": datetime.datetime.utcnow()
+            "timestamp": datetime.datetime.now(datetime.timezone.utc)
         }
         result = self.collection.insert_one(chat_data)
         return result.inserted_id
@@ -246,14 +246,14 @@ class StudentProfile:
             # "preferred_language": profile_data.get("preferred_language", "English"),
             # "career_goal": profile_data.get("career_goal", ""),
             
-            "updated_at": datetime.datetime.utcnow()
+            "updated_at": datetime.datetime.now(datetime.timezone.utc)
         }
 
         result = self.collection.update_one(
             {"user_id": ObjectId(user_id)},
             {
                 "$set": update_fields,
-                "$setOnInsert": {"created_at": datetime.datetime.utcnow()}
+                "$setOnInsert": {"created_at": datetime.datetime.now(datetime.timezone.utc)}
             },
             upsert=True
         )
@@ -276,7 +276,7 @@ class PDFMetadata:
             "semester": int(semester),
             "subject": subject.strip(),
             "academic_year": int(academic_year),
-            "uploaded_at": datetime.datetime.utcnow()
+            "uploaded_at": datetime.datetime.now(datetime.timezone.utc)
         }
         self.collection.update_one(
             {"public_id": public_id},

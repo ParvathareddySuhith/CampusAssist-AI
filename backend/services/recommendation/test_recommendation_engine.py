@@ -23,7 +23,7 @@ class TestRecommendationEngineAdaptive(unittest.TestCase):
             question="Tell me about normalization",
             user_id=self.user_id,
             session_id="session_abc",
-            timestamp=datetime.datetime.utcnow(),
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
             intent=intent,
             learning_profile=profile
         )
@@ -166,7 +166,7 @@ class TestRecommendationEngineAdaptive(unittest.TestCase):
             chat_service.router.resolve = lambda req_ctx: (mock_handler, {"intent": "ACADEMIC", "strategy": "llm", "confidence": 1.0})
 
             # Mock analytics store events to simulate a DBMS-focused student
-            today = datetime.datetime.utcnow()
+            today = datetime.datetime.now(datetime.timezone.utc)
             for i in range(4):
                 chat_service.analytics_store.add_event(
                     LearningEvent(

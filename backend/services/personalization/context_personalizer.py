@@ -58,7 +58,7 @@ class ContextPersonalizer:
                 "mode": "default"
             },
             "runtime": {
-                "current_time": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+                "current_time": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
                 "has_profile": has_profile
             }
         }

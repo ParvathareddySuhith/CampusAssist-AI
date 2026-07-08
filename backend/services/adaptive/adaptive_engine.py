@@ -82,7 +82,7 @@ class AdaptiveEngine:
         if not dates:
             return 0
 
-        today = datetime.datetime.utcnow().date()
+        today = datetime.datetime.now(datetime.timezone.utc).date()
         yesterday = today - datetime.timedelta(days=1)
 
         if dates[-1] not in (today, yesterday):

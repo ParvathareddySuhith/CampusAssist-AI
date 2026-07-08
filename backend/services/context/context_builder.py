@@ -58,7 +58,7 @@ class ContextBuilder:
             question=question,
             user_id=user_id,
             session_id=session_id,
-            timestamp=datetime.datetime.utcnow(),
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
             profile=profile,
             conversation_history=conversation_history,
             request_metadata=request_metadata,

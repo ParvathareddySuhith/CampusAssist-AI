@@ -10,7 +10,7 @@ class ConversationMemory:
     def add_interaction(self, question: str, answer: str, timestamp: str = None) -> None:
         """Appends a single QA interaction to the history list"""
         if not timestamp:
-            timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
             
         self.interactions.append({
             "question": question,
