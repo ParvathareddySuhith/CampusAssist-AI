@@ -31,6 +31,7 @@ from routes.profile_routes import create_profile_routes
 from routes.study_routes import create_study_routes
 from routes.placement_routes import create_placement_routes
 from routes.analytics_routes import create_analytics_routes
+from routes.dashboard_routes import create_dashboard_routes
 
 # Import middleware
 from middleware.middleware import (
@@ -178,6 +179,7 @@ def create_app(config_name='default'):
     app.register_blueprint(create_study_routes())
     app.register_blueprint(create_placement_routes())
     app.register_blueprint(create_analytics_routes())
+    app.register_blueprint(create_dashboard_routes())
     
     # Health check endpoint
     @app.route('/health', methods=['GET'])
