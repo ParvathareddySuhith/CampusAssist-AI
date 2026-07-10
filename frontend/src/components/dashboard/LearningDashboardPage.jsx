@@ -1,6 +1,17 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { FaSync } from "react-icons/fa";
 import { getDashboardSummary } from "../../services/dashboardService";
+
+// Import Utilities
+import { buildTrendSeries } from "../../utils/timeSeries";
+import {
+  getMostStudiedTopic,
+  getWeakestTopic,
+  getAverageQuestionsPerDay,
+  getMostActiveIntent,
+  getCurrentStudyGoal,
+  getProgressPercentage
+} from "../../utils/dashboardInsights";
 
 // Import Components
 import StudentProfileCard from "./cards/StudentProfileCard";
@@ -9,6 +20,13 @@ import AnalyticsOverview from "./cards/AnalyticsOverview";
 import ProgressOverview from "./cards/ProgressOverview";
 import RecommendationPanel from "./sections/RecommendationPanel";
 import RecentActivityTimeline from "./sections/RecentActivityTimeline";
+
+// Visualizations
+import IntentDistributionChart from "./visualizations/IntentDistributionChart";
+import StudyTrendChart from "./visualizations/StudyTrendChart";
+import ProgressSummaryChart from "./visualizations/ProgressSummaryChart";
+import LearningInsights from "./visualizations/LearningInsights";
+import GoalProgressWidget from "./visualizations/GoalProgressWidget";
 
 // Loading Skeleton placeholders matching card/grid structures to prevent layout shifts
 const DashboardSkeleton = () => (
@@ -26,13 +44,23 @@ const DashboardSkeleton = () => (
       ))}
     </div>
 
-    {/* Progress Tracks Skeleton */}
-    <div className="space-y-4">
-      <div className="h-6 w-48 bg-neutral-800/60 rounded" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="h-[160px] bg-neutral-900/30 border border-neutral-800/60 rounded-xl" />
-        <div className="h-[160px] bg-neutral-900/30 border border-neutral-800/60 rounded-xl" />
-      </div>
+    {/* Charts Skeleton */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="h-[260px] bg-neutral-900/30 border border-neutral-800/60 rounded-xl" />
+      <div className="h-[260px] bg-neutral-900/30 border border-neutral-800/60 rounded-xl" />
+    </div>
+
+    {/* Progress & Goal Widget Skeletons */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="h-[220px] bg-neutral-900/30 border border-neutral-800/60 rounded-xl" />
+      <div className="h-[220px] bg-neutral-900/30 border border-neutral-800/60 rounded-xl" />
+    </div>
+
+    {/* Insights Skeleton */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="h-[140px] bg-neutral-900/30 border border-neutral-800/60 rounded-xl" />
+      ))}
     </div>
   </div>
 );
@@ -89,6 +117,35 @@ function LearningDashboardPage() {
     }, 15000);
     return () => clearInterval(interval);
   }, [lastUpdated]);
+
+  // Memoize all derived data transformations once
+  const memoizedMetrics = useMemo(() => {
+    if (!data) return null;
+
+    const recentActivity = data.recent_activity || [];
+    const progressList = data.progress || [];
+    const learningProfile = data.learning_profile || {};
+    const analytics = data.analytics || {};
+
+    const trendSeries = buildTrendSeries(recentActivity);
+    const progressPercentage = getProgressPercentage(progressList);
+    const currentStudyGoal = getCurrentStudyGoal(progressList);
+
+    const insightsObj = {
+      mostStudiedTopic: getMostStudiedTopic(recentActivity, progressList),
+      weakestTopic: getWeakestTopic(learningProfile),
+      averageQuestionsPerDay: getAverageQuestionsPerDay(recentActivity),
+      mostActiveIntent: getMostActiveIntent(analytics),
+      progressPercentage
+    };
+
+    return {
+      trendSeries,
+      progressPercentage,
+      currentStudyGoal,
+      insightsObj
+    };
+  }, [data]);
 
   if (loading) {
     return (
@@ -171,13 +228,31 @@ function LearningDashboardPage() {
             <AnalyticsOverview analytics={data?.analytics} />
           </div>
 
-          {/* Section 3: Progress Tracks */}
-          <ProgressOverview progressList={data?.progress} />
+          {/* Section 3: Visual Analytics Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <IntentDistributionChart data={data?.analytics} />
+            <StudyTrendChart series={memoizedMetrics?.trendSeries} />
+          </div>
 
-          {/* Section 4: Recommendations & Activity timeline */}
+          {/* Section 4: Progress Summaries & Goal widgets */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ProgressSummaryChart progressList={data?.progress} />
+            <GoalProgressWidget 
+              percentage={memoizedMetrics?.progressPercentage} 
+              currentGoal={memoizedMetrics?.currentStudyGoal} 
+            />
+          </div>
+
+          {/* Section 5: Learning Insights list */}
+          <LearningInsights 
+            insights={memoizedMetrics?.insightsObj} 
+            streak={data?.learning_profile?.study_streak || 0}
+            mode={data?.learning_profile?.preferred_mode || "Quiz"}
+          />
+
+          {/* Section 6: Recommendations & Activity timeline */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              {/* Wrapped panel gracefully handling recommendations fail states */}
               <RecommendationPanel 
                 recommendations={data?.recommendations} 
                 error={data?.recommendations?.error} 
