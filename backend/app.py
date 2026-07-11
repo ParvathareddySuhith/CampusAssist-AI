@@ -116,6 +116,17 @@ def create_app(config_name='default'):
     notification_service = NotificationService(notification_store)
     app.config['NOTIFICATION_SERVICE'] = notification_service
 
+    # Initialize Admin Authentication Service (In-Memory)
+    from services.admin_auth import MemoryAdminStore, AdminAuthService
+    admin_store = MemoryAdminStore()
+    admin_auth_service = AdminAuthService(admin_store, app)
+    admin_auth_service.create_default_admin(
+        username=app.config.get("ADMIN_USERNAME", "admin"),
+        email=app.config.get("ADMIN_EMAIL"),
+        password=app.config.get("ADMIN_PASSWORD")
+    )
+    app.config["ADMIN_AUTH_SERVICE"] = admin_auth_service
+
      # Initialize Pinecone
     print("Initializing Pinecone...")
     try:
@@ -188,6 +199,9 @@ def create_app(config_name='default'):
     app.register_blueprint(create_analytics_routes())
     app.register_blueprint(create_dashboard_routes())
     app.register_blueprint(create_notification_routes(notification_service))
+    
+    from routes.admin_auth_routes import create_admin_auth_routes
+    app.register_blueprint(create_admin_auth_routes(), url_prefix='/api/admin')
     
     # Health check endpoint
     @app.route('/health', methods=['GET'])
