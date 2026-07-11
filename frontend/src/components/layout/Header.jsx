@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { FaBell, FaBars } from "react-icons/fa";
+import { FaBars } from "react-icons/fa";
+import { NotificationBell } from "../notifications";
 
 function Header({ toggleSidebar }) {
   const location = useLocation();
@@ -49,13 +50,7 @@ function Header({ toggleSidebar }) {
       {/* Right: Notification & User Avatar */}
       <div className="flex items-center space-x-4">
         {/* Notification Icon */}
-        <button 
-          className="text-neutral-400 hover:text-white p-2 rounded-lg hover:bg-neutral-900 border border-transparent hover:border-neutral-850 cursor-pointer relative"
-          title="Notifications"
-        >
-          <FaBell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-        </button>
+        <NotificationBell />
 
         {/* User Info & Avatar */}
         <div className="flex items-center space-x-3 pl-2 border-l border-neutral-900">

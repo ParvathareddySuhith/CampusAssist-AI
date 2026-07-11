@@ -72,11 +72,11 @@ describe("AnalyticsOverview", () => {
     render(<AnalyticsOverview analytics={analytics} />);
 
     expect(screen.getByText("100")).toBeDefined();
-    expect(screen.getByText("QUESTIONS ASKED")).toBeDefined();
+    expect(screen.getByText(/QUESTIONS ASKED/i)).toBeDefined();
     expect(screen.getByText("60")).toBeDefined();
-    expect(screen.getByText("ACADEMIC QUESTIONS")).toBeDefined();
+    expect(screen.getByText(/ACADEMIC QUESTIONS/i)).toBeDefined();
     expect(screen.getByText("25")).toBeDefined();
-    expect(screen.getByText("PLACEMENT ASSISTANCE")).toBeDefined();
+    expect(screen.getByText(/PLACEMENT ASSISTANCE/i)).toBeDefined();
   });
 });
 

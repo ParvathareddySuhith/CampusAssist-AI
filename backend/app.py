@@ -32,6 +32,7 @@ from routes.study_routes import create_study_routes
 from routes.placement_routes import create_placement_routes
 from routes.analytics_routes import create_analytics_routes
 from routes.dashboard_routes import create_dashboard_routes
+from routes.notification_routes import create_notification_routes
 
 # Import middleware
 from middleware.middleware import (
@@ -108,6 +109,12 @@ def create_app(config_name='default'):
     
     # Store email service in app config for global access
     app.config['EMAIL_SERVICE'] = email_service
+    
+    # Initialize Notification Service (In-Memory)
+    from services.notifications import MemoryNotificationStore, NotificationService
+    notification_store = MemoryNotificationStore()
+    notification_service = NotificationService(notification_store)
+    app.config['NOTIFICATION_SERVICE'] = notification_service
 
      # Initialize Pinecone
     print("Initializing Pinecone...")
@@ -180,6 +187,7 @@ def create_app(config_name='default'):
     app.register_blueprint(create_placement_routes())
     app.register_blueprint(create_analytics_routes())
     app.register_blueprint(create_dashboard_routes())
+    app.register_blueprint(create_notification_routes(notification_service))
     
     # Health check endpoint
     @app.route('/health', methods=['GET'])
