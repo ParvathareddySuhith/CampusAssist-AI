@@ -59,9 +59,10 @@ class StudyAssistantHandler(BaseHandler):
                 "You are an expert academic tutor. Generate exam questions in structured JSON format.\n"
                 f"Topic: {topic}\n\n"
                 "Return a JSON object with exactly the following fields:\n"
-                "- 'two_marks': a list of exactly 3 short-answer questions (conceptual definitions)\n"
-                "- 'five_marks': a list of exactly 2 medium-answer questions (explanations, differences)\n"
-                "- 'ten_marks': a list of exactly 2 long-essay questions (architectures, design, full details)."
+                "- 'two_marks': a list of exactly 3 plain text strings (each string is a short-answer question)\n"
+                "- 'five_marks': a list of exactly 2 plain text strings (each string is a medium-answer question)\n"
+                "- 'ten_marks': a list of exactly 2 plain text strings (each string is a long-essay question).\n"
+                "Make sure each item in the lists is a single string containing the question text, NOT a JSON object."
             )
         elif tool == "explain":
             system_prompt = (

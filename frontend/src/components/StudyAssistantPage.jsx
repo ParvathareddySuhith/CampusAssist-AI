@@ -390,7 +390,7 @@ function StudyAssistantPage() {
                       {result.two_marks && result.two_marks.map((q, idx) => (
                         <li key={idx} className="text-xs text-neutral-400 leading-relaxed flex items-start space-x-2">
                           <span className="text-blue-500 font-bold">{idx + 1}.</span>
-                          <span>{q}</span>
+                          <span>{typeof q === 'object' ? q.question : q}</span>
                         </li>
                       ))}
                     </ul>
@@ -411,7 +411,7 @@ function StudyAssistantPage() {
                       {result.five_marks && result.five_marks.map((q, idx) => (
                         <li key={idx} className="text-xs text-neutral-400 leading-relaxed flex items-start space-x-2">
                           <span className="text-violet-500 font-bold">{idx + 1}.</span>
-                          <span>{q}</span>
+                          <span>{typeof q === 'object' ? q.question : q}</span>
                         </li>
                       ))}
                     </ul>
@@ -432,7 +432,7 @@ function StudyAssistantPage() {
                       {result.ten_marks && result.ten_marks.map((q, idx) => (
                         <li key={idx} className="text-xs text-neutral-400 leading-relaxed flex items-start space-x-2">
                           <span className="text-emerald-500 font-bold">{idx + 1}.</span>
-                          <span>{q}</span>
+                          <span>{typeof q === 'object' ? q.question : q}</span>
                         </li>
                       ))}
                     </ul>
