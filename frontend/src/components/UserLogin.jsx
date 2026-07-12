@@ -85,9 +85,16 @@ function UserLogin() {
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="mt-2 w-full flex justify-center py-2 px-4 border border-indigo-600 text-indigo-600 rounded-md hover:bg-indigo-700 hover:text-white transition-colors duration-200"
+            className="mt-2 w-full flex justify-center py-2 px-4 border border-indigo-600 text-indigo-600 rounded-md hover:bg-indigo-750 hover:text-white transition-colors duration-200"
           >
             Go Back
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/admin")}
+            className="mt-2 w-full flex justify-center py-2 px-4 border border-neutral-700 text-neutral-400 rounded-md hover:bg-neutral-800 hover:text-white transition-colors duration-200"
+          >
+            Administrator Login
           </button>
           </div>
           <div className="text-center text-sm">
