@@ -8,6 +8,7 @@ VALID_CATEGORIES = {
     "PLACEMENT",
     "DASHBOARD",
     "SYSTEM",
+    "ACADEMIC",
 }
 
 VALID_PRIORITIES = {

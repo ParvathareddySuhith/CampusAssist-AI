@@ -20,6 +20,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
 import AdminDocumentManagement from "./pages/admin/AdminDocumentManagement";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
+import AdminNotificationManagement from "./pages/admin/AdminNotificationManagement";
 
 // Auth checks
 const isAdminAuthenticated = () => localStorage.getItem('adminToken') !== null;
@@ -68,6 +69,7 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/documents" element={<AdminDocumentManagement />} />
             <Route path="/admin/users" element={<AdminUserManagement />} />
+            <Route path="/admin/notifications" element={<AdminNotificationManagement />} />
           </Route>
         </Routes>
       </Router>

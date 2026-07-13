@@ -112,9 +112,12 @@ def create_app(config_name='default'):
     
     # Initialize Notification Service (In-Memory)
     from services.notifications import MemoryNotificationStore, NotificationService
+    from services.notifications.admin_notification_service import AdminNotificationService
     notification_store = MemoryNotificationStore()
     notification_service = NotificationService(notification_store)
+    admin_notification_service = AdminNotificationService(notification_store)
     app.config['NOTIFICATION_SERVICE'] = notification_service
+    app.config['ADMIN_NOTIFICATION_SERVICE'] = admin_notification_service
 
     # Initialize Admin Authentication Service (In-Memory)
     from services.admin_auth import MemoryAdminStore, AdminAuthService
@@ -202,8 +205,10 @@ def create_app(config_name='default'):
     
     from routes.admin_auth_routes import create_admin_auth_routes
     from routes.admin_user_routes import create_admin_user_routes
+    from routes.admin_notification_routes import create_admin_notification_routes
     app.register_blueprint(create_admin_auth_routes(), url_prefix='/api/admin')
     app.register_blueprint(create_admin_user_routes())
+    app.register_blueprint(create_admin_notification_routes(), url_prefix='/api/admin/notifications')
     
     # Health check endpoint
     @app.route('/health', methods=['GET'])
