@@ -42,7 +42,8 @@ def admin_required(f):
                 token = token[7:]
             
             data = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
-            if data.get('role') != 'admin':
+            role = data.get('role', '')
+            if not role or role.upper() != 'ADMIN':
                 return jsonify({'error': 'Admin access required'}), 403
         except Exception as e:
             return jsonify({'error': 'Token is invalid'}), 401

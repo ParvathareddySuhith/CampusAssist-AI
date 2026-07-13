@@ -100,18 +100,31 @@ class PDFController:
             return jsonify({'error': f'Error uploading PDF: {str(e)}'}), 500
     
     def list_pdfs(self):
-        """List all PDFs stored in Cloudinary"""
+        """List all PDFs stored in Cloudinary merged with MongoDB metadata"""
         try:
             # Get all PDFs from Cloudinary
             pdf_resources = self.cloudinary_service.list_pdfs()
             
-            # Print for debugging
-            print(f"Found {len(pdf_resources)} PDF resources")
-            for res in pdf_resources:
-                print(f"PDF: {res.get('public_id')}, URL: {res.get('url')}")
+            # Convert to PDF objects and merge with MongoDB metadata
+            from models.models import PDFMetadata
+            pdf_metadata_model = PDFMetadata()
+            all_metadata = {m['public_id']: m for m in pdf_metadata_model.get_all_pdf_metadata()}
             
-            # Convert to PDF objects
-            pdfs = [PDF.from_cloudinary_resource(resource).to_dict() for resource in pdf_resources]
+            pdfs = []
+            for resource in pdf_resources:
+                pdf_dict = PDF.from_cloudinary_resource(resource).to_dict()
+                meta = all_metadata.get(pdf_dict['public_id'])
+                if meta:
+                    pdf_dict['department'] = meta.get('department', '')
+                    pdf_dict['semester'] = meta.get('semester', '')
+                    pdf_dict['subject'] = meta.get('subject', '')
+                    pdf_dict['academic_year'] = meta.get('academic_year', '')
+                else:
+                    pdf_dict['department'] = ''
+                    pdf_dict['semester'] = ''
+                    pdf_dict['subject'] = ''
+                    pdf_dict['academic_year'] = ''
+                pdfs.append(pdf_dict)
             
             return jsonify({
                 'pdfs': pdfs,

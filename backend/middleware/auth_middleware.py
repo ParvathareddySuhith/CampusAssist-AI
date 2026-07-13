@@ -23,8 +23,9 @@ def admin_required(f):
         try:
             data = jwt.decode(token, Config.SECRET_KEY, algorithms=["HS256"])
             
-            # Check if the user is an admin
-            if data.get('role') != 'admin':
+            # Check if the user is an admin (case-insensitive)
+            role = data.get('role', '')
+            if not role or role.upper() != 'ADMIN':
                 return jsonify({'message': 'Admin access required'}), 403
                 
         except jwt.ExpiredSignatureError:

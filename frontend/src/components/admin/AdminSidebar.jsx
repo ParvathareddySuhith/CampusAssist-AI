@@ -97,7 +97,7 @@ function AdminSidebar({ isOpen, toggleSidebar }) {
           {/* Navigation Links */}
           <nav className="space-y-1.5 pt-4">
             <AdminNavItem to="/admin/dashboard" icon={<FaHome />} label="Dashboard" />
-            <AdminNavItem to="#" icon={<FaFileAlt />} label="Document Management" disabled />
+            <AdminNavItem to="/admin/documents" icon={<FaFileAlt />} label="Document Management" />
             <AdminNavItem to="#" icon={<FaUsers />} label="User Management" disabled />
             <AdminNavItem to="#" icon={<FaBell />} label="Notification Center" disabled />
             <AdminNavItem to="#" icon={<FaChartPie />} label="Analytics" disabled />
