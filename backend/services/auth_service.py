@@ -3,6 +3,15 @@ from models.models import User
 from utils.auth import generate_user_token
 from config.config import Config
 
+class UserDisabledError(Exception):
+    """Raised when a disabled student attempts to authenticate."""
+    pass
+
+def ensure_active_user(user):
+    """Raise UserDisabledError if the user account is disabled"""
+    if not user.get("is_active", True):
+        raise UserDisabledError("Account is disabled. Please contact administrator.")
+
 class AuthService:
     """Service for handling authentication operations"""
     
@@ -47,6 +56,11 @@ class AuthService:
             user = self.user_model.find_by_username(username)
             
             if user and self.bcrypt.check_password_hash(user["password"], password):
+                try:
+                    ensure_active_user(user)
+                except UserDisabledError as ude:
+                    return {"error": str(ude)}, 403
+                    
                 token = generate_user_token(user["_id"])
                 return {"token": token, "user_id": str(user["_id"])}, 200
             
