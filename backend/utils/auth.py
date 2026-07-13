@@ -60,10 +60,13 @@ def generate_user_token(user_id):
     }
     return jwt.encode(payload, Config.SECRET_KEY, algorithm='HS256')
 
-def generate_admin_token():
+def generate_admin_token(admin=None):
     """Generate JWT token for admin"""
+    role_val = admin.role if admin else 'ADMIN'
+    admin_id = str(admin.id) if admin else 'legacy_admin_id'
     payload = {
-        'role': 'admin',
+        'user_id': admin_id,
+        'role': role_val,
         'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24)
     }
     return jwt.encode(payload, Config.SECRET_KEY, algorithm='HS256')
