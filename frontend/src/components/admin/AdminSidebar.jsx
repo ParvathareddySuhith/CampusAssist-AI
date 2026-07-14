@@ -100,7 +100,7 @@ function AdminSidebar({ isOpen, toggleSidebar }) {
             <AdminNavItem to="/admin/documents" icon={<FaFileAlt />} label="Document Management" />
             <AdminNavItem to="/admin/users" icon={<FaUsers />} label="User Management" />
             <AdminNavItem to="/admin/notifications" icon={<FaBell />} label="Notification Management" />
-            <AdminNavItem to="#" icon={<FaChartPie />} label="Analytics" disabled />
+            <AdminNavItem to="/admin/analytics" icon={<FaChartPie />} label="Analytics" />
             <AdminNavItem to="#" icon={<FaCog />} label="System Settings" disabled />
           </nav>
         </div>

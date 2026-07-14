@@ -47,6 +47,9 @@ class AdminUserController:
             enabled = data.get("enabled", True)
 
             result = self.service.update_user_status(user_id, enabled)
+            analytics_service = current_app.config.get("ADMIN_ANALYTICS_SERVICE")
+            if analytics_service:
+                analytics_service.invalidate_cache()
             return jsonify(result), 200
         except ValueError as ve:
             return jsonify({"error": str(ve)}), 404
@@ -75,6 +78,9 @@ class AdminUserController:
                 priority=priority,
                 notification_service=notification_service
             )
+            analytics_service = current_app.config.get("ADMIN_ANALYTICS_SERVICE")
+            if analytics_service:
+                analytics_service.invalidate_cache()
             return jsonify(result), 201
         except ValueError as ve:
             return jsonify({"error": str(ve)}), 404

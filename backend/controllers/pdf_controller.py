@@ -83,6 +83,11 @@ class PDFController:
                 bytes=upload_result.get('bytes')
             )
             
+            # Invalidate analytics cache
+            analytics_service = current_app.config.get("ADMIN_ANALYTICS_SERVICE")
+            if analytics_service:
+                analytics_service.invalidate_cache()
+
             # Return success response
             return jsonify({
                 'message': 'PDF uploaded successfully',
@@ -146,6 +151,11 @@ class PDFController:
             pdf_metadata_model = PDFMetadata()
             pdf_metadata_model.delete_pdf_metadata(public_id)
             
+            # Invalidate analytics cache
+            analytics_service = current_app.config.get("ADMIN_ANALYTICS_SERVICE")
+            if analytics_service:
+                analytics_service.invalidate_cache()
+
             return jsonify({'message': 'PDF deleted successfully'}), 200
             
         except Exception as e:
@@ -161,6 +171,11 @@ class PDFController:
             # Rebuild embeddings
             vectorstore = create_embeddings()
             
+            # Invalidate analytics cache
+            analytics_service = current_app.config.get("ADMIN_ANALYTICS_SERVICE")
+            if analytics_service:
+                analytics_service.invalidate_cache()
+
             return jsonify({'message': 'Embeddings rebuilt successfully'}), 200
             
         except Exception as e:

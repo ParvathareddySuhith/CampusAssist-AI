@@ -69,6 +69,9 @@ class AdminNotificationController:
                 created_by_admin_id=admin.id,
                 sender_name=admin.username
             )
+            analytics_service = current_app.config.get("ADMIN_ANALYTICS_SERVICE")
+            if analytics_service:
+                analytics_service.invalidate_cache()
             return jsonify(result), 201
 
         except NotificationValidationError as e:
@@ -82,6 +85,9 @@ class AdminNotificationController:
             deleted_count = self._service.delete_notification(notification_id)
             if deleted_count == 0:
                 return jsonify({"error": "Notification or broadcast not found."}), 404
+            analytics_service = current_app.config.get("ADMIN_ANALYTICS_SERVICE")
+            if analytics_service:
+                analytics_service.invalidate_cache()
             return jsonify({
                 "success": True,
                 "deleted_count": deleted_count,

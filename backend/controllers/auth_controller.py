@@ -18,7 +18,12 @@ class AuthController:
             if not username or not email or not password:
                 return jsonify({"error": "All fields are required"}), 400
 
+            from flask import current_app
             result, status_code = self.auth_service.register_user(username, email, password)
+            if status_code == 201:
+                analytics_service = current_app.config.get("ADMIN_ANALYTICS_SERVICE")
+                if analytics_service:
+                    analytics_service.invalidate_cache()
             return jsonify(result), status_code
             
         except Exception as e:
