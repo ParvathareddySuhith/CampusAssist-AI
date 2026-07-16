@@ -60,3 +60,26 @@ export const rebuildKnowledgeBase = async () => {
   });
   return response.data ?? {};
 };
+
+/**
+ * Fetch document stats for admin dashboard
+ */
+export const getAdminDocumentStats = async () => {
+  const token = localStorage.getItem('adminToken');
+  const response = await api.get('/api/admin/documents/stats', {
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  return response.data ?? {};
+};
+
+/**
+ * Fetch paginated admin documents list
+ */
+export const getAdminDocuments = async (page = 1, pageSize = 20) => {
+  const token = localStorage.getItem('adminToken');
+  const response = await api.get('/api/admin/documents', {
+    params: { page, page_size: pageSize },
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  return response.data ?? {};
+};
