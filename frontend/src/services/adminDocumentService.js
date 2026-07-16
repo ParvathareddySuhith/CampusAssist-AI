@@ -75,10 +75,10 @@ export const getAdminDocumentStats = async () => {
 /**
  * Fetch paginated admin documents list
  */
-export const getAdminDocuments = async (page = 1, pageSize = 20) => {
+export const getAdminDocuments = async (page = 1, pageSize = 20, search = '', status = '') => {
   const token = localStorage.getItem('adminToken');
   const response = await api.get('/api/admin/documents', {
-    params: { page, page_size: pageSize },
+    params: { page, page_size: pageSize, search, status },
     headers: token ? { Authorization: `Bearer ${token}` } : {}
   });
   return response.data ?? {};

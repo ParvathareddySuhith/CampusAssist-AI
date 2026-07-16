@@ -115,6 +115,26 @@ class TestAdminDocumentService(unittest.TestCase):
         self.assertEqual(result["failed"], 1)
         self.assertEqual(result["indexed"], 7)
 
+    def test_list_documents_filtering(self):
+        """Test search and status filter queries forwarding to MongoDB"""
+        self.mock_pdfs_col.count_documents.return_value = 1
+        self.mock_pdfs_col.find.return_value.sort.return_value.skip.return_value.limit.return_value = []
+
+        # 1. Test search query
+        self.service.list_documents(search="OS")
+        expected_query_search = {"filename": {"$regex": "OS", "$options": "i"}}
+        self.mock_pdfs_col.count_documents.assert_any_call(expected_query_search)
+
+        # 2. Test status query (READY)
+        self.service.list_documents(status="READY")
+        expected_query_ready = {"status": {"$in": ["READY", "INDEXED", None]}}
+        self.mock_pdfs_col.count_documents.assert_any_call(expected_query_ready)
+
+        # 3. Test status query (INDEXING)
+        self.service.list_documents(status="INDEXING")
+        expected_query_indexing = {"status": {"$in": ["INDEXING", "PROCESSING"]}}
+        self.mock_pdfs_col.count_documents.assert_any_call(expected_query_indexing)
+
     def test_routes_endpoints(self):
         """Test API endpoints authorization and status returns"""
         # Set up mock counts for stats

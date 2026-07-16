@@ -17,7 +17,9 @@ def create_admin_document_routes():
             page = 1
             page_size = 20
             
-        result = service.list_documents(page=page, page_size=page_size)
+        search = request.args.get("search", "")
+        status = request.args.get("status", "")
+        result = service.list_documents(page=page, page_size=page_size, search=search, status=status)
         return jsonify(result), 200
 
     @bp.route('/stats', methods=['GET'])
