@@ -22,6 +22,7 @@ import AdminDocumentManagement from "./pages/admin/AdminDocumentManagement";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
 import AdminNotificationManagement from "./pages/admin/AdminNotificationManagement";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
+import AdminConversationExplorer from "./pages/admin/AdminConversationExplorer";
 
 // Auth checks
 const isAdminAuthenticated = () => localStorage.getItem('adminToken') !== null;
@@ -70,6 +71,7 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/documents" element={<AdminDocumentManagement />} />
             <Route path="/admin/users" element={<AdminUserManagement />} />
+            <Route path="/admin/conversations" element={<AdminConversationExplorer />} />
             <Route path="/admin/notifications" element={<AdminNotificationManagement />} />
             <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
           </Route>
