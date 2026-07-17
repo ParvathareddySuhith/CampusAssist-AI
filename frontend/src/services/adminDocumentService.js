@@ -83,3 +83,36 @@ export const getAdminDocuments = async (page = 1, pageSize = 20, search = '', st
   });
   return response.data ?? {};
 };
+
+/**
+ * Fetch detailed document settings for a single PDF
+ */
+export const getAdminDocument = async (docId) => {
+  const token = localStorage.getItem('adminToken');
+  const response = await api.get(`/api/admin/documents/${docId}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  return response.data ?? {};
+};
+
+/**
+ * Delete a document and its embeddings/file
+ */
+export const deleteAdminDocument = async (docId) => {
+  const token = localStorage.getItem('adminToken');
+  const response = await api.delete(`/api/admin/documents/${docId}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  return response.data ?? {};
+};
+
+/**
+ * Trigger re-index of a document
+ */
+export const retryAdminDocumentIndex = async (docId) => {
+  const token = localStorage.getItem('adminToken');
+  const response = await api.post(`/api/admin/documents/${docId}/retry`, {}, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  return response.data ?? {};
+};

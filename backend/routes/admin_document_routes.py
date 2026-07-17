@@ -28,14 +28,33 @@ def create_admin_document_routes():
         result = service.get_document_stats()
         return jsonify(result), 200
 
-    @bp.route('', methods=['POST'])
+    @bp.route('/<string:doc_id>', methods=['GET'])
     @admin_required
-    def upload_document():
-        return jsonify({"error": "Not Implemented"}), 501
+    def get_document(doc_id):
+        result = service.get_document(doc_id)
+        if not result:
+            return jsonify({"error": "Document not found"}), 404
+        return jsonify(result), 200
 
     @bp.route('/<string:doc_id>', methods=['DELETE'])
     @admin_required
     def delete_document(doc_id):
+        result = service.delete_document(doc_id)
+        if "error" in result:
+            return jsonify(result), 404
+        return jsonify(result), 200
+
+    @bp.route('/<string:doc_id>/retry', methods=['POST'])
+    @admin_required
+    def retry_index(doc_id):
+        result = service.retry_index(doc_id)
+        if "error" in result:
+            return jsonify(result), 404
+        return jsonify(result), 200
+
+    @bp.route('', methods=['POST'])
+    @admin_required
+    def upload_document():
         return jsonify({"error": "Not Implemented"}), 501
 
     return bp

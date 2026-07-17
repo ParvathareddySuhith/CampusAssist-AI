@@ -19,13 +19,18 @@ function DeleteDocumentDialog({ isOpen, documentName, onConfirm, onCancel }) {
             <FaExclamationTriangle className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Delete Document</h3>
-            <p className="text-xs text-neutral-400">Confirm file removal from index</p>
+            <h3 className="text-lg font-bold text-white">Delete document?</h3>
+            <p className="text-xs text-neutral-400">Permanently remove "{documentName}"</p>
           </div>
         </div>
 
-        <div className="text-sm text-neutral-300 leading-relaxed bg-neutral-950/40 p-4 border border-neutral-950 rounded-lg">
-          Are you sure you want to delete <span className="font-bold text-white">"{documentName}"</span>? This action is permanent and cannot be undone.
+        <div className="text-sm text-neutral-300 leading-relaxed bg-neutral-950/40 p-4 border border-neutral-950 rounded-lg space-y-2">
+          <p>This permanently removes:</p>
+          <ul className="list-none pl-1 space-y-1 font-semibold text-neutral-200">
+            <li>• PDF</li>
+            <li>• Vector embeddings</li>
+            <li>• Metadata</li>
+          </ul>
         </div>
 
         <div className="flex justify-end space-x-3 pt-2">

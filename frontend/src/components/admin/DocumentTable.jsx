@@ -2,7 +2,7 @@ import React from 'react';
 import { FaFilePdf, FaExternalLinkAlt } from 'react-icons/fa';
 import DocumentStatusBadge from './DocumentStatusBadge';
 
-function DocumentTable({ documents }) {
+function DocumentTable({ documents, onDetailsClick }) {
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
     try {
@@ -77,19 +77,13 @@ function DocumentTable({ documents }) {
                     <DocumentStatusBadge status={fileStatus} />
                   </td>
                   <td className="p-4 text-right">
-                    {doc.url ? (
-                      <a 
-                        href={doc.url}
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-violet-400 hover:text-violet-300 font-semibold text-xs transition-colors inline-flex items-center space-x-1 cursor-pointer select-none"
-                      >
-                        <span>View</span>
-                        <FaExternalLinkAlt className="w-2.5 h-2.5" />
-                      </a>
-                    ) : (
-                      <span className="text-xs text-neutral-500 font-semibold select-none">N/A</span>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => onDetailsClick(doc)}
+                      className="text-violet-400 hover:text-violet-300 font-semibold text-xs transition-colors cursor-pointer select-none"
+                    >
+                      Details
+                    </button>
                   </td>
                 </tr>
               );

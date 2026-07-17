@@ -36,6 +36,10 @@ class TestAdminDocumentService(unittest.TestCase):
         self.app.config['SECRET_KEY'] = 'test-secret-key'
         self.app.config['ADMIN_DOCUMENT_SERVICE'] = self.service
 
+        # Mock Admin Analytics Service for cache invalidation checks
+        self.mock_analytics_service = MagicMock()
+        self.app.config['ADMIN_ANALYTICS_SERVICE'] = self.mock_analytics_service
+
         self.admin_store = MemoryAdminStore()
         self.admin_auth_service = AdminAuthService(self.admin_store, self.app)
         self.admin_record = self.admin_store.create_admin(
@@ -135,23 +139,88 @@ class TestAdminDocumentService(unittest.TestCase):
         expected_query_indexing = {"status": {"$in": ["INDEXING", "PROCESSING"]}}
         self.mock_pdfs_col.count_documents.assert_any_call(expected_query_indexing)
 
+    def test_get_document(self):
+        """Test retrieving detailed metadata for a single document"""
+        # 1. Document exists
+        self.mock_pdfs_col.find_one.return_value = {
+            "public_id": "doc1",
+            "filename": "A.pdf",
+            "url": "http://a.pdf",
+            "department": "CSE",
+            "status": "READY",
+            "size": 1024,
+            "uploaded_at": datetime.datetime(2026, 7, 16, 12, 0, 0, tzinfo=datetime.timezone.utc),
+            "chunks": 50,
+            "embedding_model": "test-model"
+        }
+        res = self.service.get_document("doc1")
+        self.assertIsNotNone(res)
+        self.assertEqual(res["id"], "doc1")
+        self.assertEqual(res["chunks"], 50)
+        self.assertEqual(res["embedding_model"], "test-model")
+
+        # 2. Document does not exist
+        self.mock_pdfs_col.find_one.return_value = None
+        res_none = self.service.get_document("doc2")
+        self.assertIsNull = self.assertIsNone(res_none)
+
+    @patch('services.cloudinary_service.CloudinaryService.delete_pdf')
+    def test_delete_document(self, mock_cloud_delete):
+        """Test document delete removes MongoDB doc, cloud storage, and vectors"""
+        self.mock_pdfs_col.find_one.return_value = {"public_id": "doc1"}
+        
+        with patch('flask.current_app', self.app):
+            res = self.service.delete_document("doc1")
+            self.assertTrue(res["success"])
+            self.mock_pdfs_col.delete_one.assert_called_with({"public_id": "doc1"})
+            mock_cloud_delete.assert_called_with("doc1")
+            self.mock_analytics_service.invalidate_cache.assert_called()
+
+    def test_retry_index(self):
+        """Test retry sets status to INDEXING and invalidates cache"""
+        self.mock_pdfs_col.find_one.return_value = {"public_id": "doc1"}
+
+        with patch('flask.current_app', self.app):
+            res = self.service.retry_index("doc1")
+            self.assertTrue(res["success"])
+            self.assertEqual(res["status"], "INDEXING")
+            self.mock_pdfs_col.update_one.assert_called_with(
+                {"public_id": "doc1"},
+                {"$set": {"status": "INDEXING"}}
+            )
+            self.mock_analytics_service.invalidate_cache.assert_called()
+
     def test_routes_endpoints(self):
         """Test API endpoints authorization and status returns"""
-        # Set up mock counts for stats
+        # Set up mock details
         self.mock_pdfs_col.count_documents.return_value = 5
+        self.mock_pdfs_col.find_one.return_value = {
+            "public_id": "doc1",
+            "filename": "A.pdf",
+            "url": "http://a.pdf",
+            "department": "CSE",
+            "status": "READY",
+            "size": 1024,
+            "uploaded_at": datetime.datetime(2026, 7, 16, 12, 0, 0, tzinfo=datetime.timezone.utc),
+            "chunks": 50,
+            "embedding_model": "test-model"
+        }
 
-        # 1. Stats endpoint check
-        resp = self.client.get('/api/admin/documents/stats', headers=self.admin_headers)
+        # 1. Detail endpoint GET
+        resp = self.client.get('/api/admin/documents/doc1', headers=self.admin_headers)
         self.assertEqual(resp.status_code, 200)
         res_data = json.loads(resp.data.decode('utf-8'))
-        self.assertEqual(res_data["total"], 5)
+        self.assertEqual(res_data["id"], "doc1")
 
-        # 2. RBAC check for student token
-        resp_student = self.client.get('/api/admin/documents/stats', headers=self.student_headers)
+        # 2. Retry endpoint POST
+        resp_retry = self.client.post('/api/admin/documents/doc1/retry', headers=self.admin_headers)
+        self.assertEqual(resp_retry.status_code, 200)
+
+        # 3. RBAC checks on details
+        resp_student = self.client.get('/api/admin/documents/doc1', headers=self.student_headers)
         self.assertEqual(resp_student.status_code, 403)
 
-        # 3. RBAC check for anonymous request
-        resp_anon = self.client.get('/api/admin/documents/stats')
+        resp_anon = self.client.get('/api/admin/documents/doc1')
         self.assertEqual(resp_anon.status_code, 401)
 
 if __name__ == '__main__':

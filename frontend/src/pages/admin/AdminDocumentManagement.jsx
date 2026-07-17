@@ -3,18 +3,38 @@ import { FaSync, FaSearch } from 'react-icons/fa';
 import GradientText from '../../components/ui/GradientText';
 import * as docService from '../../services/adminDocumentService';
 import DocumentTable from '../../components/admin/DocumentTable';
+import DocumentDetailsDrawer from '../../components/admin/DocumentDetailsDrawer';
+import DeleteDocumentDialog from '../../components/admin/DeleteDocumentDialog';
 
 /**
- * Main Admin Document Management view displaying paginated, searchable document list
+ * Main Admin Document Management view displaying paginated, searchable document list,
+ * detailed drawer inspector, delete dialog confirmation modal, and status stats.
  */
 function AdminDocumentManagement() {
   const [documents, setDocuments] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, page_size: 20, total: 0, pages: 0 });
+  const [stats, setStats] = useState({ total: 0, indexed: 0, processing: 0, failed: 0 });
+  
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Drawer / Action states
+  const [selectedDocId, setSelectedDocId] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [deleteDoc, setDeleteDoc] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const data = await docService.getAdminDocumentStats();
+      setStats(data);
+    } catch (err) {
+      console.error('Failed to load stats:', err);
+    }
+  }, []);
 
   const fetchDocuments = useCallback(async () => {
     try {
@@ -33,14 +53,51 @@ function AdminDocumentManagement() {
 
   useEffect(() => {
     fetchDocuments();
-  }, [fetchDocuments]);
+    fetchStats();
+  }, [fetchDocuments, fetchStats]);
 
-  const handleRefresh = () => {
-    fetchDocuments();
+  const handleRefresh = async () => {
+    await Promise.all([
+      fetchDocuments(),
+      fetchStats()
+    ]);
   };
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
+  };
+
+  const handleDetailsClick = (doc) => {
+    setSelectedDocId(doc.id || doc.public_id);
+    setIsDrawerOpen(true);
+  };
+
+  const handleDeleteClick = (doc) => {
+    setDeleteDoc(doc);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDoc) return;
+    try {
+      const docId = deleteDoc.id || deleteDoc.public_id;
+      const res = await docService.deleteAdminDocument(docId);
+      if (res.success) {
+        setIsDeleteDialogOpen(false);
+        setIsDrawerOpen(false);
+        setDeleteDoc(null);
+        // Refresh both list and statistics
+        await Promise.all([
+          fetchDocuments(),
+          fetchStats()
+        ]);
+      } else {
+        alert(res.error || 'Failed to delete document.');
+      }
+    } catch (err) {
+      console.error('Error deleting document:', err);
+      alert('Error deleting document.');
+    }
   };
 
   return (
@@ -62,6 +119,26 @@ function AdminDocumentManagement() {
           <FaSync className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh</span>
         </button>
+      </div>
+
+      {/* Stats counter row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 select-none">
+        <div className="p-4 rounded-xl border border-neutral-800 bg-neutral-900/10">
+          <p className="text-[10px] uppercase font-bold text-neutral-400">Total Documents</p>
+          <p className="text-2xl font-black text-white">{stats.total}</p>
+        </div>
+        <div className="p-4 rounded-xl border border-neutral-800 bg-neutral-900/10">
+          <p className="text-[10px] uppercase font-bold text-emerald-400">Indexed</p>
+          <p className="text-2xl font-black text-emerald-400">{stats.indexed}</p>
+        </div>
+        <div className="p-4 rounded-xl border border-neutral-800 bg-neutral-900/10">
+          <p className="text-[10px] uppercase font-bold text-amber-400">Processing</p>
+          <p className="text-2xl font-black text-amber-400">{stats.processing}</p>
+        </div>
+        <div className="p-4 rounded-xl border border-neutral-800 bg-neutral-900/10">
+          <p className="text-[10px] uppercase font-bold text-rose-400">Failed</p>
+          <p className="text-2xl font-black text-rose-400">{stats.failed}</p>
+        </div>
       </div>
 
       {/* Filters Panel */}
@@ -116,7 +193,10 @@ function AdminDocumentManagement() {
           </div>
         ) : (
           <div className="space-y-4">
-            <DocumentTable documents={documents} />
+            <DocumentTable 
+              documents={documents} 
+              onDetailsClick={handleDetailsClick}
+            />
 
             {/* Pagination Controls */}
             {pagination.pages > 1 && (
@@ -147,6 +227,29 @@ function AdminDocumentManagement() {
           </div>
         )}
       </div>
+
+      {/* Details drawer inspector */}
+      <DocumentDetailsDrawer
+        isOpen={isDrawerOpen}
+        docId={selectedDocId}
+        onClose={() => {
+          setIsDrawerOpen(false);
+          setSelectedDocId(null);
+        }}
+        onDeleteClick={handleDeleteClick}
+        onRetrySuccess={fetchStats}
+      />
+
+      {/* Delete confirmation modal */}
+      <DeleteDocumentDialog
+        isOpen={isDeleteDialogOpen}
+        documentName={deleteDoc ? (deleteDoc.filename || 'Unnamed Document') : ''}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setIsDeleteDialogOpen(false);
+          setDeleteDoc(null);
+        }}
+      />
     </div>
   );
 }
