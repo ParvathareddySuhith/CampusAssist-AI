@@ -212,12 +212,14 @@ def create_app(config_name='default'):
     from routes.admin_analytics_routes import create_admin_analytics_routes
     from routes.admin_document_routes import create_admin_document_routes
     from routes.admin_conversation_routes import create_admin_conversation_routes
+    from routes.admin_system_routes import create_admin_system_routes
     app.register_blueprint(create_admin_auth_routes(), url_prefix='/api/admin')
     app.register_blueprint(create_admin_user_routes())
     app.register_blueprint(create_admin_notification_routes(), url_prefix='/api/admin/notifications')
     app.register_blueprint(create_admin_analytics_routes(), url_prefix='/api/admin/analytics')
     app.register_blueprint(create_admin_document_routes())
     app.register_blueprint(create_admin_conversation_routes())
+    app.register_blueprint(create_admin_system_routes())
     
     # Health check endpoint
     @app.route('/health', methods=['GET'])

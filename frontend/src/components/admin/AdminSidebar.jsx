@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaHome, FaFileAlt, FaUsers, FaBell, FaChartPie, FaCog, FaSignOutAlt, FaComments } from "react-icons/fa";
+import { FaHome, FaFileAlt, FaUsers, FaBell, FaChartPie, FaCog, FaSignOutAlt, FaComments, FaHeartbeat } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { useAdminAuth } from "../../hooks/useAdminAuth";
 
@@ -102,7 +102,7 @@ function AdminSidebar({ isOpen, toggleSidebar }) {
             <AdminNavItem to="/admin/conversations" icon={<FaComments />} label="Conversation Explorer" />
             <AdminNavItem to="/admin/notifications" icon={<FaBell />} label="Notification Management" />
             <AdminNavItem to="/admin/analytics" icon={<FaChartPie />} label="Analytics" />
-            <AdminNavItem to="#" icon={<FaCog />} label="System Settings" disabled />
+            <AdminNavItem to="/admin/system" icon={<FaHeartbeat />} label="System Health" />
           </nav>
         </div>
 
