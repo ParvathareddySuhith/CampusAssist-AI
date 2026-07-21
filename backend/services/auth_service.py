@@ -55,10 +55,17 @@ class AuthService:
         try:
             email = "suhithreddy18@gmail.com"
             username = "suhithreddy"
-            if not self.user_model.find_by_email(email) and not self.user_model.find_by_username(username):
-                hashed_password = self.bcrypt.generate_password_hash("Password123").decode("utf-8")
+            user = self.user_model.find_by_email(email) or self.user_model.find_by_username(username)
+            hashed_password = self.bcrypt.generate_password_hash("Password123").decode("utf-8")
+            if not user:
                 self.user_model.create_user(username, email, hashed_password)
                 print("Default test student user created successfully!")
+            else:
+                self.user_model.collection.update_one(
+                    {"_id": user["_id"]},
+                    {"$set": {"password": hashed_password, "is_active": True}}
+                )
+                print("Default test student user password updated successfully!")
         except Exception as e:
             print(f"Error ensuring default user: {str(e)}")
 
