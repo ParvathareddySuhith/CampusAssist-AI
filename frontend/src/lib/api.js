@@ -16,7 +16,7 @@ const api = axios.create({
 // Add request interceptor to include token with every request
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('adminToken');
+    const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken') || localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -52,7 +52,7 @@ export { api };
 
 // Get auth token from localStorage
 export const getAuthToken = () => {
-  const token = localStorage.getItem('adminToken');
+  const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken') || localStorage.getItem('token');
   console.log('Auth token retrieved:', token ? 'Token exists' : 'No token found');
   return token;
 };

@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   // Use environment variable for API URL or fallback to localhost for development
-  const apiUrl = env.VITE_API_BASE_URL || 'http://127.0.0.1:5000'
+  const apiUrl = env.VITE_API_BASE_URL || 'http://127.0.0.1:5001'
   
   console.log(`[Vite] Using API URL for proxy: ${apiUrl}`)
   

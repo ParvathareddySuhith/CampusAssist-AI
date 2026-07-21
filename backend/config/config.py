@@ -52,9 +52,9 @@ class Config:
     MAIL_DEBUG = False
     
     # LangChain configuration
-    LANGCHAIN_TRACING_V2 = "true"
-    LANGCHAIN_PROJECT = "Faculty Chatbot"
-    LANGCHAIN_ENDPOINT = "https://api.smith.langchain.com"
+    LANGCHAIN_TRACING_V2 = os.getenv("LANGCHAIN_TRACING_V2", "false")
+    LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT", "Faculty Chatbot")
+    LANGCHAIN_ENDPOINT = os.getenv("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
     
     # Session management
     SESSION_CLEANUP_INTERVAL = 3600  # Cleanup every hour

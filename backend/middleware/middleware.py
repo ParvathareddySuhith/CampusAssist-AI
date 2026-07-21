@@ -69,13 +69,14 @@ class EnvironmentMiddleware:
         """Set up LangChain environment variables"""
         from config.config import Config
         
-        # Set environment variables for LangChain
-        os.environ["LANGCHAIN_TRACING_V2"] = Config.LANGCHAIN_TRACING_V2
-        os.environ["LANGCHAIN_PROJECT"] = Config.LANGCHAIN_PROJECT
-        os.environ["LANGCHAIN_ENDPOINT"] = Config.LANGCHAIN_ENDPOINT
-        
+        # Set environment variables for LangChain if API key is provided
         if Config.LANGSMITH_API_KEY:
+            os.environ["LANGCHAIN_TRACING_V2"] = Config.LANGCHAIN_TRACING_V2
+            os.environ["LANGCHAIN_PROJECT"] = Config.LANGCHAIN_PROJECT
+            os.environ["LANGCHAIN_ENDPOINT"] = Config.LANGCHAIN_ENDPOINT
             os.environ["LANGSMITH_API_KEY"] = Config.LANGSMITH_API_KEY
+        else:
+            os.environ["LANGCHAIN_TRACING_V2"] = "false"
 
         # Set environment variables for Pinecone
         if Config.PINECONE_API_KEY:

@@ -343,7 +343,7 @@ def main():
     
     # Run app
     debug_mode = env == 'development'
-    port = int(os.getenv('PORT', 5000))
+    port = int(os.getenv('PORT', 5001))
     
     print(f"Starting CampusAssist AI API in {env} mode...")
     print(f"Server running on http://localhost:{port}")
