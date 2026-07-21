@@ -127,9 +127,9 @@ def create_app(config_name='default'):
     admin_store = MemoryAdminStore()
     admin_auth_service = AdminAuthService(admin_store, app)
     admin_auth_service.create_default_admin(
-        username=app.config.get("ADMIN_USERNAME", "admin"),
-        email=app.config.get("ADMIN_EMAIL"),
-        password=app.config.get("ADMIN_PASSWORD")
+        username=str(app.config.get("ADMIN_USERNAME") or "admin"),
+        email=str(app.config.get("ADMIN_EMAIL") or "testadmin@campusassist.ai"),
+        password=str(app.config.get("ADMIN_PASSWORD") or "SecurePassword123")
     )
     app.config["ADMIN_AUTH_SERVICE"] = admin_auth_service
 
