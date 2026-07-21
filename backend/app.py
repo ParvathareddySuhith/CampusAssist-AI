@@ -239,7 +239,7 @@ def create_app(config_name='default'):
         for rule in app.url_map.iter_rules():
             routes.append({
                 "endpoint": rule.endpoint,
-                "methods": list(rule.methods),
+                "methods": list(rule.methods) if rule.methods is not None else [],
                 "url": str(rule)
             })
         return {"routes": routes}, 200
@@ -262,7 +262,7 @@ def create_app(config_name='default'):
             return '', 200
         
         try:
-            data = request.json
+            data = request.json or {}
             question = data.get("question", "test question")
             
             return jsonify({
