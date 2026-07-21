@@ -50,10 +50,23 @@ class AuthService:
         except Exception as e:
             return {"error": f"Registration failed: {str(e)}"}, 500
     
+    def ensure_default_user(self):
+        """Ensure a default student account exists in the database for testing"""
+        try:
+            email = "suhithreddy18@gmail.com"
+            username = "suhithreddy"
+            if not self.user_model.find_by_email(email) and not self.user_model.find_by_username(username):
+                hashed_password = self.bcrypt.generate_password_hash("Password123").decode("utf-8")
+                self.user_model.create_user(username, email, hashed_password)
+                print("Default test student user created successfully!")
+        except Exception as e:
+            print(f"Error ensuring default user: {str(e)}")
+
     def login_user(self, username, password):
         """Authenticate user login"""
         try:
-            user = self.user_model.find_by_username(username)
+            # Support login via username or email
+            user = self.user_model.find_by_username(username) or self.user_model.find_by_email(username)
             
             if user and self.bcrypt.check_password_hash(user["password"], password):
                 try:
